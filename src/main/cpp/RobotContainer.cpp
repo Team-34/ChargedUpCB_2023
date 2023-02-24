@@ -17,12 +17,16 @@ std::shared_ptr<t34::T34XboxController> RobotContainer::m_driver_control{ nullpt
 std::shared_ptr<t34::DefaultDriveCommand> RobotContainer::m_default_command{ nullptr };
 std::shared_ptr<frc::Encoder> RobotContainer::arm_encoder{ nullptr };
 std::shared_ptr<rev::CANSparkMax> RobotContainer::m_arm_ext{ nullptr };
-std::shared_ptr<frc::Encoder> RobotContainer::wrist_encoder{ nullptr };
+std::shared_ptr<frc::Encoder> RobotContainer::wrist_y_encoder{ nullptr };
+std::shared_ptr<frc::Encoder> RobotContainer::wrist_rot_encoder{ nullptr };
 std::shared_ptr<t34::SwerveDrive> RobotContainer::m_drive{ nullptr };
 std::shared_ptr<frc::Solenoid> RobotContainer::p_grip_solenoid{ nullptr };
 std::shared_ptr<frc::Compressor> RobotContainer::p_grip_compressor{ nullptr };
 
-frc2::PIDController RobotContainer::wrist_pid{0.05, 0.0, .0};
+frc2::PIDController RobotContainer::wrist_y_pid{0.05, 0.0, .0};
+frc2::PIDController RobotContainer::wrist_rot_pid{0.05, 0.0, .0};
+frc2::PIDController RobotContainer::arm_y_pid{0.05, 0.0, .0};
+frc2::PIDController RobotContainer::arm_ext_pid{0.05, 0.0, .0};
 
 bool RobotContainer::pneumatics_running{false};
 bool RobotContainer::drive_braking{false};
@@ -43,11 +47,16 @@ void RobotContainer::initialize()
     RobotContainer::m_wrist_rot.reset(new TalonSRX(ID_WRIST_ROT_MOTOR));
 
     RobotContainer::arm_encoder.reset(new frc::Encoder(0,1));
-    RobotContainer::wrist_encoder.reset(new frc::Encoder(2,3));
+    RobotContainer::wrist_y_encoder.reset(new frc::Encoder(2,3));
+    RobotContainer::wrist_rot_encoder.reset(new frc::Encoder(4,5));
+    RobotContainer::wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
+
 
     RobotContainer::p_grip_solenoid.reset(new frc::Solenoid(frc::PneumaticsModuleType::CTREPCM, 0));
     RobotContainer::p_grip_compressor.reset(new frc::Compressor(1, frc::PneumaticsModuleType::CTREPCM));
-    RobotContainer::m_driver_control->setAllAxisDeadband(0.07);
+    RobotContainer::m_driver_control->setAllAxisDeadband(0.2);
+    RobotContainer::wrist_y_pid.EnableContinuousInput(-180.0, 180.0);
+    RobotContainer::wrist_rot_pid.EnableContinuousInput(-180.0, 180.0);
 }
 
 RobotContainer::RobotContainer() 

@@ -48,7 +48,9 @@ class RobotContainer
   static std::shared_ptr<TalonSRX> m_wrist_rot;
 
   static std::shared_ptr<frc::Encoder> arm_encoder;
-  static std::shared_ptr<frc::Encoder> wrist_encoder;
+  static std::shared_ptr<frc::Encoder> wrist_y_encoder;
+  static std::shared_ptr<frc::Encoder> wrist_rot_encoder;
+
 
   static std::shared_ptr<frc::Solenoid> p_grip_solenoid;
   static std::shared_ptr<frc::Compressor> p_grip_compressor;
@@ -60,7 +62,10 @@ class RobotContainer
   static double arm_degrees;
   static double correction_val;
 
-  static frc2::PIDController wrist_pid;
+  static frc2::PIDController wrist_y_pid;
+  static frc2::PIDController wrist_rot_pid;
+  static frc2::PIDController arm_y_pid;
+  static frc2::PIDController arm_ext_pid;
 
   //  COMMANDS
   static std::shared_ptr<t34::DefaultDriveCommand> m_default_command;

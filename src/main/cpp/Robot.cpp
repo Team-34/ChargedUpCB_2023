@@ -16,16 +16,17 @@ void Robot::RobotInit()
   frc2::CommandScheduler::GetInstance().SetDefaultCommand(RobotContainer::m_drive.get(), *RobotContainer::m_default_command.get());
 
   RobotContainer::arm_encoder->Reset();
-  RobotContainer::wrist_encoder->Reset();
+  RobotContainer::wrist_y_encoder->Reset();
   RobotContainer::m_wrist_y->SetNeutralMode(NeutralMode::Brake);
   RobotContainer::m_arm->SetNeutralMode(NeutralMode::Brake);
   RobotContainer::m_wrist_rot->SetNeutralMode(NeutralMode::Brake);
 
-  RobotContainer::wrist_pid.SetTolerance(2, 4);
-  RobotContainer::wrist_encoder->SetDistancePerPulse(360.0 / 44.4);
+  RobotContainer::wrist_y_pid.SetTolerance(2, 3);
+  RobotContainer::wrist_rot_pid.SetTolerance(2, 3);
+  RobotContainer::wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
 
   RobotContainer::p_grip_solenoid->Set(0);
-  RobotContainer::p_grip_compressor->Disable();
+  RobotContainer::p_grip_compressor->Enabled();
 }
 
 /**
@@ -38,19 +39,31 @@ void Robot::RobotInit()
  */
 void Robot::RobotPeriodic() 
 {
-  RobotContainer::wrist_degrees = t34::EncoderToDegree(44.4, RobotContainer::wrist_encoder->Get());
-  RobotContainer::arm_degrees = t34::EncoderToDegree(44.4, RobotContainer::arm_encoder->Get());
-  RobotContainer::correction_val = t34::CorrectionValue(RobotContainer::arm_degrees, RobotContainer::wrist_degrees) * -1.0;
-  frc::SmartDashboard::PutNumber("W Distance per pulse", RobotContainer::wrist_encoder->GetDistancePerPulse());
-  frc::SmartDashboard::PutNumber("W Current Position", RobotContainer::wrist_degrees);
-  frc::SmartDashboard::PutNumber("A Distance per pulse", RobotContainer::arm_encoder->GetDistancePerPulse());
-  frc::SmartDashboard::PutNumber("A Current Position", RobotContainer::arm_degrees);
-  //  Converting the encoder values of the arm motor and wrist_Y encoder to degrees ^
-
-  RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_pid.Calculate(RobotContainer::correction_val) * -0.2);
+  //  Converting the encoder values of the arm motor and wrist_Y encoder to degrees
+  RobotContainer::wrist_degrees = t34::EncoderToDegree(44.4, RobotContainer::wrist_y_encoder->Get());
+  RobotContainer::arm_degrees = t34::EncoderToDegree(4096.0, RobotContainer::arm_encoder->Get());
+  RobotContainer::correction_val = t34::CorrectionValue(0.0, RobotContainer::wrist_degrees) * -1.0;
+  //frc::SmartDashboard::PutNumber("W Distance per pulse", RobotContainer::wrist_y_encoder->GetDistancePerPulse());
+  //frc::SmartDashboard::PutNumber("W Current Position", RobotContainer::wrist_degrees);
+  //frc::SmartDashboard::PutNumber("A Distance per pulse", RobotContainer::arm_encoder->GetDistancePerPulse());
+  //frc::SmartDashboard::PutNumber("A Current Position", RobotContainer::arm_degrees);
+  
+  //  Setting the speed of the wrist_Y motor based on PID 
+  //RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_y_pid.Calculate(RobotContainer::correction_val) * -0.2);
 
   frc::SmartDashboard::PutNumber("W Motor Current", RobotContainer::m_wrist_y->GetOutputCurrent());
-  //  Setting the speed of the wrist_Y motor based on PID ^
+  frc::SmartDashboard::PutNumber("Wrist Pitch (degrees)", RobotContainer::wrist_degrees);
+  frc::SmartDashboard::PutNumber("Wrist Rot", RobotContainer::wrist_rot_encoder->Get());
+  frc::SmartDashboard::PutNumber("Correction Val", RobotContainer::correction_val);
+  frc::SmartDashboard::PutNumber("Wrist Pitch PID Setpoint", RobotContainer::wrist_y_pid.GetSetpoint());
+  frc::SmartDashboard::PutNumber("Wrist PID calc", RobotContainer::wrist_y_pid.Calculate(RobotContainer::wrist_degrees, -90.0));
+  frc::SmartDashboard::PutNumber("Wrist Rotation PID Setpoint", RobotContainer::wrist_rot_pid.GetSetpoint());
+  frc::SmartDashboard::PutNumber("Encoder Distance", RobotContainer::wrist_y_encoder->GetDistance());
+  frc::SmartDashboard::PutNumber("Wrist Pitch Current", RobotContainer::m_wrist_y->GetOutputCurrent());
+  //RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_y_pid.Calculate(RobotContainer::wrist_degrees, -90.0) * -0.4);
+
+
+  
 }
 
 /**
@@ -80,21 +93,27 @@ void Robot::TeleopInit()
  */
 void Robot::TeleopPeriodic() 
 {
+  double leftstick_Y = RobotContainer::m_driver_control->getLeftStickYDB();
+  double rightstick_X = RobotContainer::m_driver_control->getRightStickXDB();
+
   frc::SmartDashboard::PutBoolean("Pneumatics Running", RobotContainer::pneumatics_running);
   frc::SmartDashboard::PutBoolean("Drive Brake On", RobotContainer::pneumatics_running);
 
-  //  Arm Pitch Control
-  if (ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::m_driver_control->getRightStickYDB() >= 0.5 || RobotContainer::m_driver_control->getRightStickYDB() <= 0.5)
-    RobotContainer::m_arm->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::m_driver_control->getRightStickYDB() * 1.0);
+  //  Wrist Pitch Control, ctre, Right Stick Y
+  if (leftstick_Y)
+    RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.2);
+  if (rightstick_X)
+    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_rot_pid.Calculate(rightstick_X * 0.4));
 
-  //  Wrist Rotation Control
-  if (RobotContainer::m_driver_control->GetRightBumperPressed())
-    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.2);
 
-  if (RobotContainer::m_driver_control->GetLeftBumperPressed())
-    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, -0.2);
+  //  Wrist Rotation Control, ctre, Bumpers
+  /*if (RobotContainer::m_driver_control->GetRightBumperPressed())
+    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.2);*/
 
-  //  Arm Extension Control
+  /*if (RobotContainer::m_driver_control->GetLeftBumperPressed())
+    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, -0.2);*/
+
+  //  Arm Extension Control, rev, D-Pad
   int pov = RobotContainer::m_driver_control->GetPOV();
 
   if (pov == 0)
@@ -106,26 +125,15 @@ void Robot::TeleopPeriodic()
   else 
     RobotContainer::m_arm_ext->Set(0.0);
 
-  //  Compressor Toggle
-  if (RobotContainer::m_driver_control->GetStartButtonReleased())
-    RobotContainer::pneumatics_running = !RobotContainer::pneumatics_running;
-
-  if (RobotContainer::pneumatics_running)
-    RobotContainer::p_grip_compressor->EnableDigital();
-
-  else if(RobotContainer::pneumatics_running == false)
-    RobotContainer::p_grip_compressor->Disable();
-
-  //  Grip Solenoid
+  //  Grip Solenoid, Button X
   if (RobotContainer::m_driver_control->GetXButtonReleased())
     RobotContainer::p_grip_solenoid->Toggle();
   
-  //  SheildWall & Toggle Drive Break
+  //  SheildWall & Toggle Drive Break, Button Select
   if (RobotContainer::m_driver_control->GetBackButtonReleased())
   {
     RobotContainer::m_drive->sheildWall();
     RobotContainer::m_drive->toggleDriveBrake();
-    RobotContainer::drive_braking = !RobotContainer::drive_braking;
   }
 
 }

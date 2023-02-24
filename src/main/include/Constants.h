@@ -22,8 +22,8 @@ namespace t34
 
     //  Swerve Mappings     //
     #define ID_LEFT_FWD_DRIVE       22
-    #define ID_LEFT_FWD_STEER       23//0
-    #define ID_RIGHT_FWD_DRIVE      32//6
+    #define ID_LEFT_FWD_STEER       23
+    #define ID_RIGHT_FWD_DRIVE      32
     #define ID_RIGHT_FWD_STEER      33
     #define ID_LEFT_AFT_DRIVE       42
     #define ID_LEFT_AFT_STEER       43
@@ -35,10 +35,10 @@ namespace t34
     #define ID_MECH_CONTROLLER      1
 
     //  Arm Motor Mappings  //
-    #define ID_WRIST_Y_MOTOR        14
-    #define ID_WRIST_ROT_MOTOR      1
-    #define ID_ARM_MOTOR            9
-    #define ID_ARM_EXT_MOTOR        15
+    #define ID_WRIST_ROT_MOTOR      11 //talon 2
+    #define ID_ARM_MOTOR            12 
+    #define ID_WRIST_Y_MOTOR        13 //talon 7
+    #define ID_ARM_EXT_MOTOR        14
 
     //  Ramp Limiters       //
     #define RAMP_LIMIT_X            1.0
