@@ -17,7 +17,7 @@ void Robot::RobotInit()
 
   RobotContainer::arm_encoder->Reset();
   RobotContainer::wrist_y_encoder->Reset();
-  RobotContainer::m_wrist_y->SetNeutralMode(NeutralMode::Brake);
+  RobotContainer::m_wrist_y->SetNeutralMode(NeutralMode::Coast);
   RobotContainer::m_arm->SetNeutralMode(NeutralMode::Brake);
   RobotContainer::m_wrist_rot->SetNeutralMode(NeutralMode::Brake);
 
@@ -61,9 +61,6 @@ void Robot::RobotPeriodic()
   frc::SmartDashboard::PutNumber("Encoder Distance", RobotContainer::wrist_y_encoder->GetDistance());
   frc::SmartDashboard::PutNumber("Wrist Pitch Current", RobotContainer::m_wrist_y->GetOutputCurrent());
   //RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_y_pid.Calculate(RobotContainer::wrist_degrees, -90.0) * -0.4);
-
-
-  
 }
 
 /**
@@ -101,9 +98,7 @@ void Robot::TeleopPeriodic()
 
   //  Wrist Pitch Control, ctre, Right Stick Y
   if (leftstick_Y)
-    RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.2);
-  if (rightstick_X)
-    RobotContainer::m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_rot_pid.Calculate(rightstick_X * 0.4));
+    RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.4);
 
 
   //  Wrist Rotation Control, ctre, Bumpers

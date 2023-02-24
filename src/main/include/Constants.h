@@ -35,9 +35,9 @@ namespace t34
     #define ID_MECH_CONTROLLER      1
 
     //  Arm Motor Mappings  //
-    #define ID_WRIST_ROT_MOTOR      11 //talon 2
+    #define ID_WRIST_ROT_MOTOR      11 //talon 7
     #define ID_ARM_MOTOR            12 
-    #define ID_WRIST_Y_MOTOR        13 //talon 7
+    #define ID_WRIST_Y_MOTOR        13 //talon 2
     #define ID_ARM_EXT_MOTOR        14
 
     //  Ramp Limiters       //
