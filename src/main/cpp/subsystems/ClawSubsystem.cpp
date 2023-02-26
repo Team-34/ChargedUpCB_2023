@@ -22,8 +22,9 @@ constexpr double jpencoder{ 360.0 / 44.4 };
   
   void WristStabilize(double wrist_degrees, double arm_degrees) 
     {
+      auto rc = RobotContainer::get();
       frc::SmartDashboard::PutNumber("W Current Position", wrist_degrees);
-      RobotContainer::m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, RobotContainer::wrist_y_pid.Calculate(wrist_degrees) * 0.2);
+      rc->m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, rc->wrist_y_pid.Calculate(wrist_degrees) * 0.2);
     }
 
 

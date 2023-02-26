@@ -19,7 +19,8 @@ namespace t34
 
     void CMD_AutoBal::Execute()
     {
-        RobotContainer::m_drive->manualdrive(PitchPID.Calculate(navX->GetPitch(), 0.0));
+        RobotContainer::get()->m_drive->manualdrive(PitchPID.Calculate(navX->GetPitch(), 0.0));
+        
     }
 
 
@@ -27,7 +28,7 @@ namespace t34
     {
         if (PitchPID.AtSetpoint() == true)
         {
-            RobotContainer::m_drive->manualdrive(0.0);
+            RobotContainer::get()->m_drive->manualdrive(0.0);
         }
         return true;
     }

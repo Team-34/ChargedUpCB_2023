@@ -6,10 +6,10 @@ namespace t34 {
 
     SwerveDrive::SwerveDrive() 
         : m_gyro(new AHRS(frc::SPI::Port::kMXP))
-        , m_lf(new SwerveModule("Left_Front",  ID_LEFT_FWD_DRIVE, ID_LEFT_FWD_STEER,  -1.0, ID_ENCODER_LEFT_FWD))
-        , m_la(new SwerveModule("Left Back",   ID_LEFT_AFT_DRIVE, ID_LEFT_AFT_STEER,  -1.0,  ID_ENCODER_LEFT_AFT))
-        , m_rf(new SwerveModule("Right_Front", ID_RIGHT_FWD_DRIVE, ID_RIGHT_FWD_STEER, 1.0, ID_ENCODER_RIGHT_FWD))
-        , m_ra(new SwerveModule("Right_Back",  ID_RIGHT_AFT_DRIVE, ID_RIGHT_AFT_STEER, 1.0, ID_ENCODER_RIGHT_AFT ))
+        , m_lf(new SwerveModule("Left_Front",  ID_LEFT_FWD_DRIVE, ID_LEFT_FWD_STEER,  -1.0, ID_ENCODER_LEFT_FWD, LF_STEER_OFFSET))
+        , m_la(new SwerveModule("Left Back",   ID_LEFT_AFT_DRIVE, ID_LEFT_AFT_STEER,  -1.0,  ID_ENCODER_LEFT_AFT, LA_STEER_OFFSET))
+        , m_rf(new SwerveModule("Right_Front", ID_RIGHT_FWD_DRIVE, ID_RIGHT_FWD_STEER, 1.0, ID_ENCODER_RIGHT_FWD, RF_STEER_OFFSET))
+        , m_ra(new SwerveModule("Right_Back",  ID_RIGHT_AFT_DRIVE, ID_RIGHT_AFT_STEER, 1.0, ID_ENCODER_RIGHT_AFT, RA_STEER_OFFSET))
         , m_drive_brake_on(true) 
         , m_db(0.2)
 
@@ -43,7 +43,8 @@ namespace t34 {
 
     void SwerveDrive::setDriveBrake(bool on) 
     {
-        if (on) {
+        if (on) 
+        {
 
             m_lf->setDriveBrake();    
             m_la->setDriveBrake();    
@@ -52,6 +53,7 @@ namespace t34 {
             m_drive_brake_on = true;
 
         }
+
         else 
         {
 
@@ -91,7 +93,8 @@ namespace t34 {
         frc::SmartDashboard::PutNumber("Y", y);
         frc::SmartDashboard::PutNumber("R", r);
         
-        if (m_mode == DriveMode::FieldOriented && m_gyro != nullptr) { 
+        if (m_mode == DriveMode::FieldOriented && m_gyro != nullptr) 
+        { 
               
             double gyro_radians = deg_to_rad(m_gyro->GetYaw());
             double temp_y = y * cos(gyro_radians) + -x * sin(gyro_radians);
@@ -112,6 +115,7 @@ namespace t34 {
         m_la->setSteerPosition(m_la, rad_to_deg(atan2(a, c)), m_la->offset);
         m_rf->setSteerPosition(m_rf, rad_to_deg(atan2(b, d)), m_rf->offset);
         m_ra->setSteerPosition(m_ra, rad_to_deg(atan2(a, d)), m_ra->offset);
+        frc::SmartDashboard::PutNumber("Steer output, ra", rad_to_deg(atan2(a, d)));
 
 
         double lf_drive_output = sqrt(sqr(b) + sqr(c)); 
@@ -158,7 +162,7 @@ namespace t34 {
         
         if (m_speed < 0.5) 
         {
-            m_speed = 1.0;
+            m_speed = 0.7;
             frc::SmartDashboard::PutBoolean("High Speed", true);
         }
         else 
@@ -221,10 +225,12 @@ namespace t34 {
         frc::SmartDashboard::PutNumber(m_ra->module_name + " CDP", m_ra->drive->GetSelectedSensorPosition());
   
         frc::SmartDashboard::PutString("Drive Mode ", m_mode == DriveMode::RobotCentric ? "Robot Centric" : "Field Oriented"); 
-        frc::SmartDashboard::PutNumber("raabs", m_ra->encoder->GetPosition());
-        frc::SmartDashboard::PutNumber("rfabs", m_rf->encoder->GetPosition());
-        frc::SmartDashboard::PutNumber("laabs", m_la->encoder->GetPosition());
-        frc::SmartDashboard::PutNumber("lfabs", m_lf->encoder->GetPosition());
+
+        // frc::SmartDashboard::PutNumber("raabs", m_ra->encoder.GetPosition());
+        // frc::SmartDashboard::PutNumber("rfabs", m_rf->encoder.GetPosition());
+        // frc::SmartDashboard::PutNumber("laabs", m_la->encoder.GetPosition());
+        // frc::SmartDashboard::PutNumber("lfabs", m_lf->encoder.GetPosition());
+
         frc::SmartDashboard::PutNumber("lf offset", m_lf->offset);       
 
     }
@@ -232,12 +238,13 @@ namespace t34 {
 
     void SwerveDrive::zeroSteering()
     {
-        m_lf->steer->Set(ControlMode::Position, (m_lf->offset * FULL_UNITS));
-        m_la->steer->Set(ControlMode::Position, (m_la->offset * FULL_UNITS));
-        m_rf->steer->Set(ControlMode::Position, (m_rf->offset * FULL_UNITS));
-        m_ra->steer->Set(ControlMode::Position, (m_ra->offset * FULL_UNITS));
+        m_lf->zeroSteer();//Set(ControlMode::Position, //(m_lf->offset * FULL_UNITS));
+        m_la->zeroSteer();//Set(ControlMode::Position, (m_la->offset * FULL_UNITS));
+        m_rf->zeroSteer();//Set(ControlMode::Position, (m_rf->offset * FULL_UNITS));
+        m_ra->zeroSteer();//Set(ControlMode::Position, (m_ra->offset * FULL_UNITS));
 
         m_is_steering_zeroed = true;
+        std::cout << "zero steering called";
     }
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <iostream>
 
 #include <AHRS.h>
 
@@ -23,13 +24,14 @@ namespace t34 {
 
     class SwerveModule {
     public:
-        SwerveModule(std::string name, const int drive_id, const int steer_id, int invert, const int encoder_id) 
+        SwerveModule(std::string name, const int drive_id, const int steer_id, int invert, const int encoder_id, double offset) 
             : drive(new WPI_TalonFX(drive_id))
             , steer(new WPI_TalonFX(steer_id))
-            , encoder(new ctre::phoenix::sensors::CANCoder(encoder_id, "CANcoder"))
-            , offset(fabs(steer->GetSelectedSensorPosition())) 
+//            , encoder(new ctre::phoenix::sensors::CANCoder(encoder_id, "CANcoder"))
+            , offset(offset)//fabs(steer->GetSelectedSensorPosition())) 
             , module_name(name)
             , invert_value(invert) 
+            , encoder(encoder_id)
             {
 
             // Configure Drive Motor
@@ -39,14 +41,15 @@ namespace t34 {
             // ??? SETTINGS FOR DRIVE ???
 
             // Configure Steer Motor
-            steer->ConfigFactoryDefault();            
+            //steer->ConfigFactoryDefault();            
             steer->SetNeutralMode(NeutralMode::Coast);
-            steer->ConfigFeedbackNotContinuous(false);
-            steer->ConfigSelectedFeedbackSensor(FeedbackDevice::IntegratedSensor, 0, 0);
-            steer->ConfigIntegratedSensorAbsoluteRange(AbsoluteSensorRange::Signed_PlusMinus180);
+            steer->ConfigFeedbackNotContinuous(true);
+            //steer->ConfigSelectedFeedbackSensor(FeedbackDevice::IntegratedSensor, 0, 0);
+            steer->ConfigIntegratedSensorAbsoluteRange(AbsoluteSensorRange::Unsigned_0_to_360);
             steer->ConfigIntegratedSensorInitializationStrategy(ctre::phoenix::sensors::SensorInitializationStrategy::BootToAbsolutePosition);
             steer->Config_kP(0, 0.4, 0.0);
             steer->Config_kD(0, 0.0, 0.0);
+            encoder.ConfigMagnetOffset(offset);
             
             // Configure Encoder 
             //offset = encoder->GetValue() * ABS_TO_IS;
@@ -55,34 +58,39 @@ namespace t34 {
 
         inline void setDriveBrake(bool on = true) { drive->SetNeutralMode(on ? NeutralMode::Brake : NeutralMode::Coast); }
 
-        inline void zeroSteer() { steer->Set(ControlMode::Position, -offset); }
+        void zeroSteer() { //steer->Set(ControlMode::Position, -offset);
+        //std::shared_ptr<SwerveModule> SM(this);
+        //std::cout << SM ? "Valid" : "Invalid";
+        //setSteerPosition(SM, offset, 0.0);
+        steer->Set(ControlMode::Position, offset);
+        }
 
 
         void setSteerPosition(std::shared_ptr<SwerveModule> sm, const double& position, double offset = 0.0) 
         {
-            double current_position = sm->steer->GetSelectedSensorPosition();
-            double set_point = (position + 180) / 360.0 * FULL_UNITS;
+            double current_position = sm->encoder.GetAbsolutePosition();
+            double set_point = (position) / 360.0 * 4096;
             
             //double set_point = (((position) + 180) / 360.0) * FULL_UNITS;
-            double delta = fmod(set_point - current_position, FULL_UNITS);
+            double delta = fmod(set_point - current_position, 4096);
 
             //Calculating Shortest Distance
-            if(fabs(delta) > 6553.6)     {
-
-                delta -= copysign(13107.2, delta);
-                sm->invert_value = -1.0;
-
-            }
-            else 
-                sm->invert_value = 1.0;
+             if(fabs(delta) >1024.0)     
+             {
+                 delta -= copysign(2048.0, delta);
+                 sm->invert_value = -1.0;
+             }
+             else 
+                 sm->invert_value = 1.0;
         
-            sm->steer->Set(ControlMode::Position, current_position + delta + (offset < 13107.2 ? -offset : offset));
+            sm->steer->Set(ControlMode::Position, current_position + delta); //+  (offset < 2048.0 ? -offset : offset));
+            //sm->steer->Set(ControlMode::Position, position / 4096);
         }
 
 
         std::shared_ptr<WPI_TalonFX> drive;
         std::shared_ptr<WPI_TalonFX> steer;
-        std::shared_ptr<ctre::phoenix::sensors::CANCoder> encoder;
+        CANCoder encoder;
         double offset;
         
         std::string module_name;

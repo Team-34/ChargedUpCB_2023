@@ -35,51 +35,45 @@
 class RobotContainer 
 {
  public:
-  RobotContainer();
-
-  static void initialize();
-
-  static std::shared_ptr<t34::T34XboxController> m_driver_control;
-  static std::shared_ptr<t34::SwerveDrive> m_drive; 
-
-  static std::shared_ptr<TalonSRX> m_arm;
-  static std::shared_ptr<rev::CANSparkMax> m_arm_ext;
-  static std::shared_ptr<TalonSRX> m_wrist_y;
-  static std::shared_ptr<TalonSRX> m_wrist_rot;
-
-  static std::shared_ptr<frc::Encoder> arm_encoder;
-  static std::shared_ptr<frc::Encoder> wrist_y_encoder;
-  static std::shared_ptr<frc::Encoder> wrist_rot_encoder;
+    static std::shared_ptr<RobotContainer> get();
 
 
-  static std::shared_ptr<frc::Solenoid> p_grip_solenoid;
-  static std::shared_ptr<frc::Compressor> p_grip_compressor;
+    std::shared_ptr<t34::T34XboxController> m_driver_control;
+    std::shared_ptr<t34::SwerveDrive> m_drive; 
+    std::shared_ptr<TalonSRX> m_arm;
+    std::shared_ptr<rev::CANSparkMax> m_arm_ext;
+    std::shared_ptr<TalonSRX> m_wrist_y;
+    std::shared_ptr<TalonSRX> m_wrist_rot;
+    std::shared_ptr<frc::Encoder> arm_encoder;
+    std::shared_ptr<frc::Encoder> wrist_y_encoder;
+    std::shared_ptr<frc::Encoder> wrist_rot_encoder;
+    std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;
+    std::shared_ptr<frc::Solenoid> p_grip_solenoid;
+    std::shared_ptr<frc::Compressor> p_grip_compressor;
+    bool pneumatics_running;
+    bool drive_braking;
+    double wrist_degrees;
+    double arm_degrees;
+    double correction_val;
+    frc2::PIDController wrist_y_pid;
+    frc2::PIDController wrist_rot_pid;
+    frc2::PIDController arm_y_pid;
+    frc2::PIDController arm_ext_pid;
 
-  static bool pneumatics_running;
-  static bool drive_braking;
-
-  static double wrist_degrees;
-  static double arm_degrees;
-  static double correction_val;
-
-  static frc2::PIDController wrist_y_pid;
-  static frc2::PIDController wrist_rot_pid;
-  static frc2::PIDController arm_y_pid;
-  static frc2::PIDController arm_ext_pid;
-
-  //  COMMANDS
-  static std::shared_ptr<t34::DefaultDriveCommand> m_default_command;
+    //  COMMANDS
+    t34::DefaultDriveCommand m_default_command;
 
 
-  frc2::CommandPtr GetAutonomousCommand();
+    frc2::CommandPtr GetAutonomousCommand();
 
  private:
-  // Replace with CommandPS4Controller or CommandJoystick if needed
-  frc2::CommandXboxController m_driverController{
-      t34::kDriverControllerPort};
+    RobotContainer();
+    // Replace with CommandPS4Controller or CommandJoystick if needed
+    frc2::CommandXboxController m_driverController{
+        t34::kDriverControllerPort};
 
-  // The robot's subsystems are defined here...
-  ExampleSubsystem m_subsystem;
+    // The robot's subsystems are defined here...
+    ExampleSubsystem m_subsystem;
 
-  void ConfigureBindings();
+    void ConfigureBindings();
 };

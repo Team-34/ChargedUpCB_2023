@@ -36,7 +36,7 @@ namespace t34
 
     //  Arm Motor Mappings  //
     #define ID_WRIST_ROT_MOTOR      11 //talon 7
-    #define ID_ARM_MOTOR            12 
+    #define ID_ARM_PITCH_MOTOR      12 
     #define ID_WRIST_Y_MOTOR        13 //talon 2
     #define ID_ARM_EXT_MOTOR        14
 
@@ -46,10 +46,10 @@ namespace t34
     #define RAMP_LIMIT_R            1.0
 
     //  Encoder IDs         //
-    #define ID_ENCODER_LEFT_FWD        21
-    #define ID_ENCODER_RIGHT_FWD       31
-    #define ID_ENCODER_LEFT_AFT        41
-    #define ID_ENCODER_RIGHT_AFT       51
+    #define ID_ENCODER_LEFT_FWD        2
+    #define ID_ENCODER_RIGHT_FWD       3
+    #define ID_ENCODER_LEFT_AFT        4
+    #define ID_ENCODER_RIGHT_AFT       5
 
     //  Commands            //
 
@@ -61,8 +61,15 @@ namespace t34
 
     constexpr double _PI_DIV_180(){ return PI / 180.0; }
 
+    constexpr double LA_STEER_OFFSET {  -141.6  };
+    constexpr double LF_STEER_OFFSET {  -355.6  };
+    constexpr double RA_STEER_OFFSET {  -203.4 };
+    constexpr double RF_STEER_OFFSET {  -37.0  };
+
+
     //constexpr double FULL_UNITS{ 26214.4 };
     constexpr double FULL_UNITS{ 4096.0 };
+    constexpr double NEO550_FULL_UNITS{ 42.0 };
     //constexpr double UNITS_PER_INCH{ 1331.52715655 };
     constexpr double UNITS_PER_INCH{ 208.051118211 };
     constexpr double ABS_TO_IS{  FULL_UNITS/4096.0  };
