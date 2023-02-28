@@ -20,83 +20,81 @@ namespace t34 {
         FieldOriented
     };
 
-
-
     class SwerveModule {
     public:
         SwerveModule(std::string name, const int drive_id, const int steer_id, int invert, const int encoder_id, double offset) 
-            : drive(new WPI_TalonFX(drive_id))
-            , steer(new WPI_TalonFX(steer_id))
-//            , encoder(new ctre::phoenix::sensors::CANCoder(encoder_id, "CANcoder"))
-            , offset(offset)//fabs(steer->GetSelectedSensorPosition())) 
-            , module_name(name)
-            , invert_value(invert) 
-            , encoder(encoder_id)
-            {
+            : drive(TalonFX(drive_id))
+            , steer(TalonFX(steer_id))
+            , encoder(encoder_id) 
+            , zero_offset(offset)
+            , invert_value(invert)  
+            , module_name(name) {
 
-            // Configure Drive Motor
-            drive->ConfigFactoryDefault();
-            drive->SetNeutralMode(NeutralMode::Coast);
-            setDriveBrake(true);
-            // ??? SETTINGS FOR DRIVE ???
+            SlotConfiguration slot;
+            steer.GetSlotConfigs(slot);
+            slot.kP = 0.4;
+            slot.kI = 0.0;
+            slot.kD = 0.0;
+            slot.kF = 0.0;
+            //slot.integralZone = 180.0;
+            slot.allowableClosedloopError = 2.0;
+            //slot.maxIntegralAccumulator = 360.0;
+            slot.closedLoopPeakOutput = 1.0;
+
+            // Configure Steering Encoder
+            encoder.ConfigSensorInitializationStrategy(SensorInitializationStrategy::BootToAbsolutePosition);
+            encoder.ConfigAbsoluteSensorRange(AbsoluteSensorRange::Signed_PlusMinus180);
+            encoder.ConfigMagnetOffset(offset);
+            encoder.SetPositionToAbsolute();
 
             // Configure Steer Motor
-            //steer->ConfigFactoryDefault();            
-            steer->SetNeutralMode(NeutralMode::Coast);
-            steer->ConfigFeedbackNotContinuous(true);
-            //steer->ConfigSelectedFeedbackSensor(FeedbackDevice::IntegratedSensor, 0, 0);
-            steer->ConfigIntegratedSensorAbsoluteRange(AbsoluteSensorRange::Unsigned_0_to_360);
-            steer->ConfigIntegratedSensorInitializationStrategy(ctre::phoenix::sensors::SensorInitializationStrategy::BootToAbsolutePosition);
-            steer->Config_kP(0, 0.4, 0.0);
-            steer->Config_kD(0, 0.0, 0.0);
-            encoder.ConfigMagnetOffset(offset);
-            
-            // Configure Encoder 
-            //offset = encoder->GetValue() * ABS_TO_IS;
+            steer.ConfigRemoteFeedbackFilter(encoder_id, RemoteSensorSource::RemoteSensorSource_CANCoder, 0, 0);
+            steer.ConfigSelectedFeedbackSensor(FeedbackDevice::RemoteSensor0);
+            steer.ConfigureSlot(slot, 0, 0);
+            steer.SetNeutralMode(NeutralMode::Coast);
+            steer.ConfigFeedbackNotContinuous(false);
 
+
+            // Configure Drive Motor
+            drive.ConfigFactoryDefault();
+            drive.SetNeutralMode(NeutralMode::Coast);
+            setDriveBrake(true);
         }
 
-        inline void setDriveBrake(bool on = true) { drive->SetNeutralMode(on ? NeutralMode::Brake : NeutralMode::Coast); }
+        inline void setDriveBrake(bool on = true) { drive.SetNeutralMode(on ? NeutralMode::Brake : NeutralMode::Coast); }
 
-        void zeroSteer() { //steer->Set(ControlMode::Position, -offset);
-        //std::shared_ptr<SwerveModule> SM(this);
-        //std::cout << SM ? "Valid" : "Invalid";
-        //setSteerPosition(SM, offset, 0.0);
-        steer->Set(ControlMode::Position, offset);
+        void zeroSteer() { 
+            steer.Set(ControlMode::Position, 0.0);
         }
 
 
-        void setSteerPosition(std::shared_ptr<SwerveModule> sm, const double& position, double offset = 0.0) 
+        void setSteerPosition(const double& position, double offset = 0.0) 
         {
-            double current_position = sm->encoder.GetAbsolutePosition();
-            double set_point = (position) / 360.0 * 4096;
+            double current_position = encoder.GetAbsolutePosition();
+            double set_point = (position + 180.0) / 360.0 * FULL_UNITS;
             
-            //double set_point = (((position) + 180) / 360.0) * FULL_UNITS;
-            double delta = fmod(set_point - current_position, 4096);
+            double delta = fmod(set_point - current_position, FULL_UNITS);
 
             //Calculating Shortest Distance
-             if(fabs(delta) >1024.0)     
-             {
+             if(fabs(delta) > 1024.0) {
                  delta -= copysign(2048.0, delta);
-                 sm->invert_value = -1.0;
+                 invert_value = -1.0;
              }
              else 
-                 sm->invert_value = 1.0;
+                 invert_value = 1.0;
         
-            sm->steer->Set(ControlMode::Position, current_position + delta); //+  (offset < 2048.0 ? -offset : offset));
-            //sm->steer->Set(ControlMode::Position, position / 4096);
+            steer.Set(ControlMode::Position, current_position + delta +  (offset < 2048.0 ? -offset : offset));
         }
 
 
-        std::shared_ptr<WPI_TalonFX> drive;
-        std::shared_ptr<WPI_TalonFX> steer;
+        TalonFX drive;
+        TalonFX steer;
         CANCoder encoder;
-        double offset;
         
-        std::string module_name;
-        double invert_value;    
-        
+        double zero_offset;
+        double invert_value; 
 
+        std::string module_name;
     };
 
     class SwerveDrive : public frc2::SubsystemBase {
@@ -107,8 +105,8 @@ namespace t34 {
         virtual void Periodic();
 
         // Gyro
-        inline double getHeading() {return m_gyro->GetFusedHeading();}
-        inline double getYaw() { return m_gyro->GetYaw(); }
+        inline double getHeading() {return m_gyro.GetFusedHeading();}
+        inline double getYaw() { return m_gyro.GetYaw(); }
         void zeroYaw();
         
         // Drive Mode
@@ -141,13 +139,13 @@ namespace t34 {
 
         void InitDefaultDrive();
 
-        std::shared_ptr<SwerveModule> m_lf;
-        std::shared_ptr<SwerveModule> m_la;
-        std::shared_ptr<SwerveModule> m_rf;
-        std::shared_ptr<SwerveModule> m_ra;
+        SwerveModule m_lf;
+        SwerveModule m_la;
+        SwerveModule m_rf;
+        SwerveModule m_ra;
 
     private:
-        std::shared_ptr<AHRS> m_gyro;
+        AHRS m_gyro;
         double m_heading_offset;
         DriveMode m_mode;
         

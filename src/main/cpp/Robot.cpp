@@ -22,6 +22,7 @@ void Robot::RobotInit()
   rc->m_wrist_y->SetNeutralMode(NeutralMode::Brake);
   rc->m_wrist_rot->SetNeutralMode(NeutralMode::Brake);
   rc->m_arm->SetNeutralMode(NeutralMode::Brake);
+  rc->m_arm_ext->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 
   rc->wrist_y_pid.SetTolerance(2, 3);
   rc->wrist_rot_pid.SetTolerance(2, 3);
@@ -67,10 +68,10 @@ void Robot::RobotPeriodic()
   frc::SmartDashboard::PutNumber("Wrist Pitch Current", rc->m_wrist_y->GetOutputCurrent());
   
 */
-  frc::SmartDashboard::PutNumber("Encoder Val, LA", rc->m_drive->m_la->encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, LF", rc->m_drive->m_lf->encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, RA", rc->m_drive->m_ra->encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, RF", rc->m_drive->m_rf->encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder Val, LA", rc->m_drive->m_la.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder Val, LF", rc->m_drive->m_lf.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder Val, RA", rc->m_drive->m_ra.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder Val, RF", rc->m_drive->m_rf.encoder.GetAbsolutePosition());
   
  //  frc::SmartDashboard::PutNumber("Encoder Val, RF", cc.GetPosition());
 

@@ -19,9 +19,12 @@ namespace t34
        //double x = m_driver_control->getLeftStickXDB(); 
        //double y =           m_driver_control->getLeftStickYDB(); 
        //double z =           m_driver_control->getTriggersCoercedDB();
-               m_drive->drive(m_driver_control->getLeftStickXDB(), 
-                  m_driver_control->getLeftStickYDB(), 
-                  m_driver_control->getTriggersCoercedDB());
+            m_drive->drive
+            (
+            -m_driver_control->getLeftStickXDB(), 
+            -m_driver_control->getLeftStickYDB(), 
+            m_driver_control->getTriggersCoercedDB()
+            );
       
     }
 
