@@ -11,6 +11,7 @@
 #include <rev/CANSparkMaxLowLevel.h>
 #include <ctre/Phoenix.h>
 #include <frc/Encoder.h>
+#include <frc/AnalogEncoder.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/controller/PIDController.h>
 #include <frc2/command/SequentialCommandGroup.h>
@@ -37,14 +38,15 @@ class RobotContainer
  public:
     static std::shared_ptr<RobotContainer> get();
 
+    frc::AnalogInput m_arm_encoder;
 
     std::shared_ptr<t34::T34XboxController> m_driver_control;
     std::shared_ptr<t34::SwerveDrive> m_drive; 
-    std::shared_ptr<TalonSRX> m_arm;
-    std::shared_ptr<rev::CANSparkMax> m_arm_ext;
+    std::shared_ptr<TalonFX> m_arm;
+    rev::CANSparkMax m_arm_ext;
     std::shared_ptr<TalonSRX> m_wrist_y;
     std::shared_ptr<TalonSRX> m_wrist_rot;
-    std::shared_ptr<frc::Encoder> arm_encoder;
+    //std::shared_ptr<frc::AnalogEncoder> arm_encoder;
     std::shared_ptr<frc::Encoder> wrist_y_encoder;
     std::shared_ptr<frc::Encoder> wrist_rot_encoder;
     std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;

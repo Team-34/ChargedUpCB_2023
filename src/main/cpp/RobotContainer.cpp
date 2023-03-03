@@ -42,27 +42,46 @@ RobotContainer::RobotContainer()
     , wrist_y_pid(frc::PIDController(0.05, 0.0, .0))
     , wrist_rot_pid(frc::PIDController(0.05, 0.0, .0))
     , arm_y_pid(frc::PIDController(0.05, 0.0, .0))
-    , arm_ext_pid(frc::PIDController(0.05, 0.0, .0)) {
+    , arm_ext_pid(frc::PIDController(0.05, 0.0, .0)) 
+    , m_arm_ext(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless) 
+    , m_arm_encoder(0) {
 
-    m_arm.reset(new TalonSRX(ID_ARM_PITCH_MOTOR));
-    m_arm_ext.reset(new rev::CANSparkMax(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless));
+    m_arm.reset(new TalonFX(ID_ARM_PITCH_MOTOR));
+    //m_arm_ext//.reset(new rev::CANSparkMax(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless));
+
     m_wrist_y.reset(new TalonSRX(ID_WRIST_Y_MOTOR));
     m_wrist_rot.reset(new TalonSRX(ID_WRIST_ROT_MOTOR));
 
     //RobotContainer::arm_ext_encoder.reset(new rev::SparkMaxRelativeEncoder(m_arm_ext)));
-    arm_encoder.reset(new frc::Encoder(0,1));
+    //arm_encoder.reset(new frc::AnalogEncoder(0));
+   
+
     wrist_y_encoder.reset(new frc::Encoder(2,3));
     wrist_rot_encoder.reset(new frc::Encoder(4,5));
     wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
 
+    SlotConfiguration arm_slot;
+    m_arm->GetSlotConfigs(arm_slot);
+    arm_slot.kP = 0.4;
+    arm_slot.kI = 0.0;
+    arm_slot.kD = 0.0;
+    arm_slot.kF = 0.0;
+    arm_slot.allowableClosedloopError = 2.0;
+    arm_slot.closedLoopPeakOutput = 1.0;
+
+    m_arm->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
+    //m_arm->ConfigRemoteFeedbackFilter(ID_ENCODER_ARM_PITCH, RemoteSensorSource::RemoteSensorSource_TalonFX_SelectedSensor, 0, 0);
+    //m_arm->ConfigSelectedFeedbackSensor(FeedbackDevice::);
+    //m_arm->ConfigureSlot(arm_slot, 0, 0);
 
     p_grip_solenoid.reset(new frc::Solenoid(frc::PneumaticsModuleType::CTREPCM, 0));
-    p_grip_compressor.reset(new frc::Compressor(1, frc::PneumaticsModuleType::CTREPCM));
+    p_grip_compressor.reset(new frc::Compressor(0, frc::PneumaticsModuleType::CTREPCM));
     m_driver_control->setAllAxisDeadband(0.2);
     wrist_y_pid.EnableContinuousInput(-180.0, 180.0);
     wrist_rot_pid.EnableContinuousInput(-180.0, 180.0);
+    arm_y_pid.EnableContinuousInput(0.0, 360.0);
+    
 
-    pneumatics_running = false;
     drive_braking = false;
     wrist_degrees = 0.0 ;
     arm_degrees = 0.0 ;

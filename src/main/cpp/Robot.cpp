@@ -12,23 +12,26 @@ Robot::Robot() {}
 
 void Robot::RobotInit() 
 {
-  
   auto rc = RobotContainer::get();
   //g_def_cmd = t34::DefaultDriveCommand(rc->m_drive, rc->m_driver_control);
   frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
 
-  rc->arm_encoder->Reset();
+  //rc->arm_encoder->Reset();
   rc->wrist_y_encoder->Reset();
   rc->m_wrist_y->SetNeutralMode(NeutralMode::Brake);
   rc->m_wrist_rot->SetNeutralMode(NeutralMode::Brake);
   rc->m_arm->SetNeutralMode(NeutralMode::Brake);
-  rc->m_arm_ext->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+
+  rc->m_arm_ext.SetCANTimeout(200);
+  rc->m_arm_ext.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 
   rc->wrist_y_pid.SetTolerance(2, 3);
   rc->wrist_rot_pid.SetTolerance(2, 3);
   rc->wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
 
   rc->p_grip_solenoid->Set(0);
+  rc->p_grip_compressor->Disable();
+  //rc->arm_encoder->SetDistancePerRotation(1024.0 / 360.0);
   //rc->p_grip_compressor->Enabled();
 }
 
@@ -44,10 +47,10 @@ void Robot::RobotPeriodic()
 {
   frc2::CommandScheduler::GetInstance().Run();
   
-    auto rc = RobotContainer::get();
+  auto rc = RobotContainer::get();
   //  Converting the encoder values of the arm motor and wrist_Y encoder to degrees
   rc->wrist_degrees = t34::EncoderToDegree(44.4, rc->wrist_y_encoder->Get());
-  rc->arm_degrees = t34::EncoderToDegree(4096.0, rc->arm_encoder->Get());
+  //rc->arm_degrees = t34::EncoderToDegree(4096.0, rc->arm_encoder->GetAbsolutePosition());
   rc->correction_val = t34::CorrectionValue(0.0, rc->wrist_degrees) * -1.0;
   //frc::SmartDashboard::PutNumber("W Distance per pulse", rc->wrist_y_encoder->GetDistancePerPulse());
   //frc::SmartDashboard::PutNumber("W Current Position", rc->wrist_degrees);
@@ -98,55 +101,73 @@ void Robot::TeleopInit()
 {
   auto rc = RobotContainer::get();
   rc->m_drive->zeroYaw();
-  
 }
 
 /**
  * This function is called periodically during operator control.
  */
+ constexpr double arm_full_units{ 2048.0 * 32.0 };
 void Robot::TeleopPeriodic() 
 {
   auto rc = RobotContainer::get();
-  //if (!rc->m_drive->isSteeringZeroed())
-  //  rc->m_drive->zeroSteering();
   double rightstick_y = rc->m_driver_control->getRightStickYDB();
 
-  frc::SmartDashboard::PutBoolean("Pneumatics Running", rc->pneumatics_running);
+  // auto sc = rc->m_arm->GetSensorCollection();
+  // auto enc = sc.GetIntegratedSensorAbsolutePosition()  * 32.0;
+  auto abs_enc = rc->m_arm_encoder.GetVoltage();
 
-  //  Wrist Pitch Control, ctre, Right Stick Y
-  if (rightstick_y)
-    rc->m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, rightstick_y * 0.4);
+  frc::SmartDashboard::PutNumber("Arm Pitch Encoder", abs_enc);//rc->arm_encoder->GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Arm Pitch Encoder m", ((360.0 / 5.0) * abs_enc));
+   //frc::SmartDashboard::PutNumber("Arm Pitch Encoder(distance)", rc->arm_encoder->GetDistance());
+  // frc::SmartDashboard::PutNumber("Arm TALON Enc", enc);
+  // frc::SmartDashboard::PutNumber("Arm TALON Enc degrees", enc * (360.0 / arm_full_units));
+
+//  int pov = rc->m_driver_control->GetPOV();
+//  double arm_pitch_setpoint = 180.0 * rightstick_y;
 
 
-  //  Wrist Rotation Control, ctre, Bumpers
-  /*if (rc->m_driver_control->GetRightBumperPressed())
-    rc->m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, 0.2);*/
+  //  Arm Pitch Control, ctre, Right Stick Y
+  rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y * 0.7);
 
-  /*if (rc->m_driver_control->GetLeftBumperPressed())
-    rc->m_wrist_rot->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, -0.2);*/
+//     rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y * 0.4);
 
-  //  Arm Extension Control, rev, D-Pad
-  int pov = rc->m_driver_control->GetPOV();
+//frc::SmartDashboard::PutNumber("Motor Current", rc->m_arm_ext.GetOutputCurrent());
+//frc::SmartDashboard::PutNumber("Right stick y", rightstick_y);
+    //rc->m_arm->Set(ControlMode::Position, arm_pitch_setpoint);
 
-  if (pov == 0)
-    rc->m_arm_ext->Set(0.2);
 
-  else if (pov == 180)
-    rc->m_arm_ext->Set(-0.2);
+  //  Wrist Pitch Control, D-Pad left & right
+   
 
-  else 
-    rc->m_arm_ext->Set(0.0);
+//   if (pov == 0)
+//     rc->m_wrist_y->Set(ControlMode::PercentOutput, 0.2);
+
+//   else if (pov == 180)
+//     rc->m_wrist_y->Set(ControlMode::PercentOutput, -0.2);
+
+//   else 
+//     rc->m_wrist_y->Set(ControlMode::PercentOutput, 0.0);
+
+
+  //  Arm Extension Control, D-Pad up & down
+//   if (pov == 270)
+//     rc->m_arm_ext->Set(0.2);
+
+//   else if (pov == 90)
+//     rc->m_arm_ext->Set(-0.2);
+
+//   else 
+//     rc->m_arm_ext->Set(0.0);
 
 
   //  Grip Solenoid, Button X
-  if (rc->m_driver_control->GetXButtonReleased())
-    rc->p_grip_solenoid->Toggle();
+ if (rc->m_driver_control->GetXButtonReleased())
+   rc->p_grip_solenoid->Toggle();
   
 
   //  SheildWall & Toggle Drive Break, Button Select
-  if (rc->m_driver_control->GetBackButtonReleased())
-    rc->m_drive->sheildWall();
-
+//  if (rc->m_driver_control->GetBackButtonReleased())
+//    rc->m_drive->sheildWall();
 }
 
 /**

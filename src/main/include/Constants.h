@@ -38,7 +38,7 @@ namespace t34
     #define ID_WRIST_ROT_MOTOR      11 //talon 7
     #define ID_ARM_PITCH_MOTOR      12 
     #define ID_WRIST_Y_MOTOR        13 //talon 2
-    #define ID_ARM_EXT_MOTOR        14
+    #define ID_ARM_EXT_MOTOR        14 
 
     //  Ramp Limiters       //
     #define RAMP_LIMIT_X            1.0
@@ -50,6 +50,10 @@ namespace t34
     #define ID_ENCODER_RIGHT_FWD       3
     #define ID_ENCODER_LEFT_AFT        4
     #define ID_ENCODER_RIGHT_AFT       5
+    #define ID_ENCODER_ARM_PITCH       6
+    #define ID_ENCODER_ARM_EXT         7
+    #define ID_ENCODER_WRIST_ROT       9
+    #define ID_ENCODER_WRIST_PITCH     10
 
     //  Commands            //
 
