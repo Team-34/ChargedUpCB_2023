@@ -35,9 +35,9 @@ namespace t34
     #define ID_MECH_CONTROLLER      1
 
     //  Arm Motor Mappings  //
-    #define ID_WRIST_ROT_MOTOR      11 //talon 7
+    #define ID_WRIST_Y_MOTOR        11 //talon 7
     #define ID_ARM_PITCH_MOTOR      12 
-    #define ID_WRIST_Y_MOTOR        13 //talon 2
+    #define ID_WRIST_ROT_MOTOR      13 //talon 2
     #define ID_ARM_EXT_MOTOR        14 
 
     //  Ramp Limiters       //
@@ -64,6 +64,8 @@ namespace t34
     constexpr double _180_DIV_PI(){ return 180.0 / PI; }
 
     constexpr double _PI_DIV_180(){ return PI / 180.0; }
+
+    constexpr double ARM_PITCH_DEGREE{  0/*360.0 * ((zerodegree/360.0)/zerodegree)*/  };
 
     constexpr double LA_STEER_OFFSET {  -141.6  };
     constexpr double LF_STEER_OFFSET {  -355.6  };
@@ -116,3 +118,19 @@ namespace t34
     inline double rad_to_deg(double rad) { return rad * _180_DIV_PI(); }
 
 }  
+
+/****WIRING GUIDE****
+ * Rotation********
+ * 
+ * Green = 2
+ * Blue = GROUND
+ * Red = POWER
+ * White = 1
+ * 
+ * Pitch***********
+ * 
+ * Green With White Stripe = 3
+ * Blue With White Stripe = GROUND
+ * Red With Black Stripe = POWER
+ * White With Black Stripe = 0
+*********************/

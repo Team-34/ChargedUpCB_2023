@@ -38,21 +38,24 @@ class RobotContainer
  public:
     static std::shared_ptr<RobotContainer> get();
 
-    frc::AnalogInput m_arm_encoder;
+    frc::AnalogEncoder arm_encoder;
+    rev::CANSparkMax m_arm_ext;
+    TalonSRX m_wrist_y;
+    TalonSRX m_wrist_rot;
+    frc::Encoder wrist_y_encoder;
+    frc::Encoder wrist_rot_encoder;
+    
 
     std::shared_ptr<t34::T34XboxController> m_driver_control;
     std::shared_ptr<t34::SwerveDrive> m_drive; 
     std::shared_ptr<TalonFX> m_arm;
-    rev::CANSparkMax m_arm_ext;
-    std::shared_ptr<TalonSRX> m_wrist_y;
-    std::shared_ptr<TalonSRX> m_wrist_rot;
-    //std::shared_ptr<frc::AnalogEncoder> arm_encoder;
-    std::shared_ptr<frc::Encoder> wrist_y_encoder;
-    std::shared_ptr<frc::Encoder> wrist_rot_encoder;
+    //std::shared_ptr<TalonSRX> m_wrist_y;
+    //std::shared_ptr<TalonSRX> m_wrist_rot;
     std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;
     std::shared_ptr<frc::Solenoid> p_grip_solenoid;
     std::shared_ptr<frc::Compressor> p_grip_compressor;
     bool pneumatics_running;
+    bool wristRotTog;
     bool drive_braking;
     double wrist_degrees;
     double arm_degrees;
@@ -62,8 +65,15 @@ class RobotContainer
     frc2::PIDController arm_y_pid;
     frc2::PIDController arm_ext_pid;
 
+    class T34AnalogInput : public frc::AnalogInput {
+        //double GetAbsoluteArmPitch();
+        //double GetArmPitchDeg(double encoder_val);//Alternative
+    };
+
     //  COMMANDS
     t34::DefaultDriveCommand m_default_command;
+
+
 
 
     frc2::CommandPtr GetAutonomousCommand();

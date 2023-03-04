@@ -6,7 +6,7 @@
 
 #include <frc2/command/button/Trigger.h>
 
-
+#include "Constants.h"
 #include "commands/Autos.h"
 #include "commands/ExampleCommand.h"
 
@@ -39,26 +39,28 @@ RobotContainer::RobotContainer()
     : m_driver_control(new t34::T34XboxController(ID_DRIVE_CONTROLLER)) 
     , m_drive(new t34::SwerveDrive())
     , m_default_command(m_drive, m_driver_control) 
-    , wrist_y_pid(frc::PIDController(0.05, 0.0, .0))
-    , wrist_rot_pid(frc::PIDController(0.05, 0.0, .0))
-    , arm_y_pid(frc::PIDController(0.05, 0.0, .0))
-    , arm_ext_pid(frc::PIDController(0.05, 0.0, .0)) 
+    , wrist_y_pid(frc::PIDController(0.05, 0.0, 0.0))
+    , wrist_rot_pid(frc::PIDController(0.05, 0.0, 0.0))
+    , arm_y_pid(frc::PIDController(0.05, 0.0, 0.0))
+    , arm_ext_pid(frc::PIDController(0.05, 0.0, 0.0)) 
     , m_arm_ext(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless) 
-    , m_arm_encoder(0) {
+    , arm_encoder(0)
+    , m_wrist_y(TalonSRX(ID_WRIST_Y_MOTOR))
+    , m_wrist_rot(TalonSRX(ID_WRIST_ROT_MOTOR))
+    , wrist_y_encoder(0,1)
+    , wrist_rot_encoder(2,3){
 
     m_arm.reset(new TalonFX(ID_ARM_PITCH_MOTOR));
     //m_arm_ext//.reset(new rev::CANSparkMax(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless));
 
-    m_wrist_y.reset(new TalonSRX(ID_WRIST_Y_MOTOR));
-    m_wrist_rot.reset(new TalonSRX(ID_WRIST_ROT_MOTOR));
+    //m_wrist_y.reset(new TalonSRX(ID_WRIST_Y_MOTOR));
+    //m_wrist_rot.reset(new TalonSRX(ID_WRIST_ROT_MOTOR));
 
     //RobotContainer::arm_ext_encoder.reset(new rev::SparkMaxRelativeEncoder(m_arm_ext)));
     //arm_encoder.reset(new frc::AnalogEncoder(0));
    
 
-    wrist_y_encoder.reset(new frc::Encoder(2,3));
-    wrist_rot_encoder.reset(new frc::Encoder(4,5));
-    wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
+    //wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
 
     SlotConfiguration arm_slot;
     m_arm->GetSlotConfigs(arm_slot);
@@ -110,3 +112,17 @@ frc2::CommandPtr RobotContainer::GetAutonomousCommand()
   // An example command will be run in autonomous
   return autos::ExampleAuto(&m_subsystem);
 }
+
+/*double RobotContainer::T34AnalogInput::GetAbsoluteArmPitch() 
+{
+  double NewVoltage = GetVoltage();
+
+  if (GetVoltage() >= 0.023 && GetVoltage() < 2.523)
+  {
+    
+  }
+
+  return NewVoltage;
+};*/
+
+//double RobotContainer::T34AnalogInput::GetArmPitchDeg(double encoder_val){  return (encoder_val-1.669) * t34::ARM_PITCH_DEGREE;  };
