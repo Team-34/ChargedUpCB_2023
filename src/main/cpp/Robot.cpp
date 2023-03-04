@@ -16,23 +16,26 @@ void Robot::RobotInit()
   //g_def_cmd = t34::DefaultDriveCommand(rc->m_drive, rc->m_driver_control);
   frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
 
-  //rc->arm_encoder->Reset();
-  rc->wrist_y_encoder->Reset();
-  rc->m_wrist_y->SetNeutralMode(NeutralMode::Brake);
-  rc->m_wrist_rot->SetNeutralMode(NeutralMode::Brake);
+  rc->wrist_y_encoder.Reset();
+  rc->m_wrist_y.SetNeutralMode(NeutralMode::Brake);
+  rc->m_wrist_rot.SetNeutralMode(NeutralMode::Brake);
   rc->m_arm->SetNeutralMode(NeutralMode::Brake);
+
+  rc->arm_encoder.Reset();
+  rc->arm_encoder.SetDistancePerRotation(2048.0 * 32.0);
 
   rc->m_arm_ext.SetCANTimeout(200);
   rc->m_arm_ext.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 
   rc->wrist_y_pid.SetTolerance(2, 3);
   rc->wrist_rot_pid.SetTolerance(2, 3);
-  rc->wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
+  //rc->wrist_y_encoder.SetDistancePerPulse(360.0 / 44.4);
 
   rc->p_grip_solenoid->Set(0);
   rc->p_grip_compressor->Disable();
   //rc->arm_encoder->SetDistancePerRotation(1024.0 / 360.0);
-  //rc->p_grip_compressor->Enabled();
+
+  rc->wristRotTog = false;
 }
 
 /**
@@ -49,7 +52,7 @@ void Robot::RobotPeriodic()
   
   auto rc = RobotContainer::get();
   //  Converting the encoder values of the arm motor and wrist_Y encoder to degrees
-  rc->wrist_degrees = t34::EncoderToDegree(44.4, rc->wrist_y_encoder->Get());
+  rc->wrist_degrees = t34::EncoderToDegree(44.4, rc->wrist_y_encoder.Get());
   //rc->arm_degrees = t34::EncoderToDegree(4096.0, rc->arm_encoder->GetAbsolutePosition());
   rc->correction_val = t34::CorrectionValue(0.0, rc->wrist_degrees) * -1.0;
   //frc::SmartDashboard::PutNumber("W Distance per pulse", rc->wrist_y_encoder->GetDistancePerPulse());
@@ -106,28 +109,48 @@ void Robot::TeleopInit()
 /**
  * This function is called periodically during operator control.
  */
- constexpr double arm_full_units{ 2048.0 * 32.0 };
+constexpr double arm_full_units{ 2048.0 * 32.0 };
 void Robot::TeleopPeriodic() 
 {
   auto rc = RobotContainer::get();
+  bool wristTog = rc->wristRotTog;
   double rightstick_y = rc->m_driver_control->getRightStickYDB();
+  double rightstick_x = rc->m_driver_control->getRightStickXDB();
 
   // auto sc = rc->m_arm->GetSensorCollection();
   // auto enc = sc.GetIntegratedSensorAbsolutePosition()  * 32.0;
-  auto abs_enc = rc->m_arm_encoder.GetVoltage();
+  //auto abs_enc = rc->arm_encoder.GetVoltage();
 
-  frc::SmartDashboard::PutNumber("Arm Pitch Encoder", abs_enc);//rc->arm_encoder->GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Arm Pitch Encoder m", ((360.0 / 5.0) * abs_enc));
-   //frc::SmartDashboard::PutNumber("Arm Pitch Encoder(distance)", rc->arm_encoder->GetDistance());
-  // frc::SmartDashboard::PutNumber("Arm TALON Enc", enc);
-  // frc::SmartDashboard::PutNumber("Arm TALON Enc degrees", enc * (360.0 / arm_full_units));
+  frc::SmartDashboard::PutNumber("Wrist Rotation", rc->wrist_rot_encoder.GetDistance());
+  frc::SmartDashboard::PutNumber("Wrist Pitch", rc->wrist_y_encoder.GetDistance());
+  //frc::SmartDashboard::PutNumber("Arm Pitch Encoder", abs_enc);//rc->arm_encoder->GetAbsolutePosition());
+  //frc::SmartDashboard::PutNumber("Arm Pitch Encoder m", ((360.0 / 5.0) * abs_enc));
+  frc::SmartDashboard::PutNumber("Arm Analog Encoder Degrees", rc->arm_encoder.GetAbsolutePosition() * 360.0);
+  frc::SmartDashboard::PutNumber("Arm Analog Encoder", rc->arm_encoder.GetAbsolutePosition());
+  //frc::SmartDashboard::PutNumber("Arm Pitch Encoder Acc count", rc->arm_encoder.GetAccumulatorCount());
 
 //  int pov = rc->m_driver_control->GetPOV();
 //  double arm_pitch_setpoint = 180.0 * rightstick_y;
 
+  //  Toggle Wrist Rotation With Bumper
+  if (rc->m_driver_control->GetRightBumperReleased())
+    wristTog = !wristTog;
+
+  if (wristTog == true)
+    rc->m_wrist_rot.Set(ControlMode::Position, rc->wrist_rot_pid.Calculate(180.0));
+  if (wristTog == false)
+    rc->m_wrist_rot.Set(ControlMode::Position, rc->wrist_rot_pid.Calculate(0.0));
 
   //  Arm Pitch Control, ctre, Right Stick Y
-  rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y * 0.7);
+  rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y);
+  rc->m_wrist_rot.Set(ControlMode::PercentOutput, rightstick_x);
+
+  // if (rc->m_driver_control->GetLeftBumperPressed())
+  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.7);
+  // else if (rc->m_driver_control->GetRightBumperPressed())
+  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.7);
+  // else
+  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.0);
 
 //     rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y * 0.4);
 
