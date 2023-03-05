@@ -39,16 +39,17 @@ RobotContainer::RobotContainer()
     : m_driver_control(new t34::T34XboxController(ID_DRIVE_CONTROLLER)) 
     , m_drive(new t34::SwerveDrive())
     , m_default_command(m_drive, m_driver_control) 
-    , wrist_y_pid(frc::PIDController(0.05, 0.0, 0.0))
-    , wrist_rot_pid(frc::PIDController(0.05, 0.0, 0.0))
-    , arm_y_pid(frc::PIDController(0.05, 0.0, 0.0))
-    , arm_ext_pid(frc::PIDController(0.05, 0.0, 0.0)) 
+    , wrist_y_pid(frc2::PIDController(0.05, 0.0, 0.0))
+    , wrist_rot_pid(frc2::PIDController(0.05, 0.0, 0.0))
+    , arm_y_pid(frc2::PIDController(0.05, 0.0, 0.0))
+    , arm_ext_pid(frc2::PIDController(0.05, 0.0, 0.0)) 
     , m_arm_ext(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless) 
-    , arm_encoder(0)
+    //, arm_encoder(0)
     , m_wrist_y(TalonSRX(ID_WRIST_Y_MOTOR))
     , m_wrist_rot(TalonSRX(ID_WRIST_ROT_MOTOR))
     , wrist_y_encoder(0,1)
-    , wrist_rot_encoder(2,3){
+    , wrist_rot_encoder(2,3)
+    , T34ArmEncoder(0){
 
     m_arm.reset(new TalonFX(ID_ARM_PITCH_MOTOR));
     //m_arm_ext//.reset(new rev::CANSparkMax(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless));

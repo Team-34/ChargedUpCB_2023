@@ -25,6 +25,7 @@
 #include "utils/T34XboxController.h"
 #include "commands/CMD_DefaultDrive.h"
 #include "subsystems/ClawSubsystem.h"
+#include "T34AnalogEncoder.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -38,12 +39,13 @@ class RobotContainer
  public:
     static std::shared_ptr<RobotContainer> get();
 
-    frc::AnalogEncoder arm_encoder;
+    //frc::AnalogEncoder arm_encoder;
     rev::CANSparkMax m_arm_ext;
     TalonSRX m_wrist_y;
     TalonSRX m_wrist_rot;
     frc::Encoder wrist_y_encoder;
     frc::Encoder wrist_rot_encoder;
+    T34AnalogEncoder T34ArmEncoder;
     
 
     std::shared_ptr<t34::T34XboxController> m_driver_control;
@@ -65,10 +67,7 @@ class RobotContainer
     frc2::PIDController arm_y_pid;
     frc2::PIDController arm_ext_pid;
 
-    class T34AnalogInput : public frc::AnalogInput {
-        //double GetAbsoluteArmPitch();
-        //double GetArmPitchDeg(double encoder_val);//Alternative
-    };
+    
 
     //  COMMANDS
     t34::DefaultDriveCommand m_default_command;
