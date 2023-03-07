@@ -71,7 +71,7 @@ namespace t34
     constexpr double LF_STEER_OFFSET {  -355.6  };
     constexpr double RA_STEER_OFFSET {  -203.4 };
     constexpr double RF_STEER_OFFSET {  -37.0  };
-    constexpr double ARM_FULL_UNITS { 2048.0 * 32.0 };
+    constexpr double ARM_FULL_UNITS  { 2048.0 * 32.0 };
 
 
     //constexpr double FULL_UNITS{ 26214.4 };

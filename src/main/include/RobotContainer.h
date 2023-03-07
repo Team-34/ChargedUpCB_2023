@@ -18,6 +18,7 @@
 #include <AHRS.h>
 #include <frc/Compressor.h>
 #include <frc/Solenoid.h>
+#include <frc/DigitalInput.h>
 
 #include "Constants.h"
 #include "subsystems/SwerveDrive.h"
@@ -26,6 +27,7 @@
 #include "commands/CMD_DefaultDrive.h"
 #include "subsystems/ClawSubsystem.h"
 #include "T34AnalogEncoder.h"
+#include "subsystems/ArmSubsystem.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -40,41 +42,37 @@ class RobotContainer
     static std::shared_ptr<RobotContainer> get();
 
     //frc::AnalogEncoder arm_encoder;
-    rev::CANSparkMax m_arm_ext;
+    TalonSRX m_arm_ext;
     TalonSRX m_wrist_y;
     TalonSRX m_wrist_rot;
     frc::Encoder wrist_y_encoder;
     frc::Encoder wrist_rot_encoder;
+    frc::DigitalInput m_limit_switch_back;
+    frc::DigitalInput m_limit_switch_front;
     T34AnalogEncoder T34ArmEncoder;
-    
+    ArmSubsystem armSub;
 
-    std::shared_ptr<t34::T34XboxController> m_driver_control;
-    std::shared_ptr<t34::SwerveDrive> m_drive; 
-    std::shared_ptr<TalonFX> m_arm;
-    //std::shared_ptr<TalonSRX> m_wrist_y;
-    //std::shared_ptr<TalonSRX> m_wrist_rot;
-    std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;
-    std::shared_ptr<frc::Solenoid> p_grip_solenoid;
-    std::shared_ptr<frc::Compressor> p_grip_compressor;
+    frc2::PIDController wrist_y_pid;
+    frc2::PIDController wrist_rot_pid;
+    frc2::PIDController arm_y_pid;
+    frc2::PIDController arm_ext_pid;
+
     bool pneumatics_running;
     bool wristRotTog;
     bool drive_braking;
     double wrist_degrees;
     double arm_degrees;
     double correction_val;
-    frc2::PIDController wrist_y_pid;
-    frc2::PIDController wrist_rot_pid;
-    frc2::PIDController arm_y_pid;
-    frc2::PIDController arm_ext_pid;
-
     
+    std::shared_ptr<t34::T34XboxController> m_driver_control;
+    std::shared_ptr<t34::SwerveDrive> m_drive; 
+    std::shared_ptr<TalonFX> m_arm;
+    std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;
+    std::shared_ptr<frc::Solenoid> p_grip_solenoid;
+    std::shared_ptr<frc::Compressor> p_grip_compressor;
 
     //  COMMANDS
     t34::DefaultDriveCommand m_default_command;
-
-
-
-
     frc2::CommandPtr GetAutonomousCommand();
 
  private:

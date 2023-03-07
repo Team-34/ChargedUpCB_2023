@@ -17,12 +17,11 @@ namespace t34 {
         rc->m_wrist_y.Set(ControlMode::Position, rc->wrist_y_pid.Calculate(rc->wrist_degrees, 0.0));
 
         if (current_arm_ext <= arm_ext_setpoint)
-            rc->m_arm_ext.Set(0.2);
+            rc->m_arm_ext.Set(ControlMode::PercentOutput, 0.2);
         else if (current_arm_ext >= arm_ext_setpoint)
-            rc->m_arm_ext.Set(-0.2);
+            rc->m_arm_ext.Set(ControlMode::PercentOutput, -0.2);
         else
-            rc->m_arm_ext.Set(0.0);
-        
+            rc->m_arm_ext.Set(ControlMode::PercentOutput, 0.0);
     };
 
     bool CMD_Grab::IsFinished() 

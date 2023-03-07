@@ -13,27 +13,25 @@ Robot::Robot() {}
 void Robot::RobotInit() 
 {
   auto rc = RobotContainer::get();
-  //g_def_cmd = t34::DefaultDriveCommand(rc->m_drive, rc->m_driver_control);
-  frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
 
-  rc->wrist_y_encoder.Reset();
   rc->m_wrist_y.SetNeutralMode(NeutralMode::Brake);
   rc->m_wrist_rot.SetNeutralMode(NeutralMode::Brake);
   rc->m_arm->SetNeutralMode(NeutralMode::Brake);
+  rc->m_arm_ext.SetNeutralMode(Coast);
 
   rc->T34ArmEncoder.Reset();
   rc->T34ArmEncoder.SetDistancePerRotation(2048.0 * 32.0);
-
-  rc->m_arm_ext.SetCANTimeout(200);
-  rc->m_arm_ext.SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+  rc->wrist_y_encoder.Reset();
+  //rc->wrist_y_encoder.SetDistancePerPulse(360.0 / 44.4);
+  //rc->arm_encoder->SetDistancePerRotation(1024.0 / 360.0);
 
   rc->wrist_y_pid.SetTolerance(2, 3);
   rc->wrist_rot_pid.SetTolerance(2, 3);
-  //rc->wrist_y_encoder.SetDistancePerPulse(360.0 / 44.4);
-
+  
   rc->p_grip_solenoid->Set(0);
   rc->p_grip_compressor->Disable();
-  //rc->arm_encoder->SetDistancePerRotation(1024.0 / 360.0);
+
+  frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
 
   rc->wristRotTog = false;
 }
@@ -49,38 +47,19 @@ void Robot::RobotInit()
 void Robot::RobotPeriodic() 
 {
   frc2::CommandScheduler::GetInstance().Run();
-  
   auto rc = RobotContainer::get();
+
   //  Converting the encoder values of the arm motor and wrist_Y encoder to degrees
   rc->wrist_degrees = t34::EncoderToDegree(44.4, rc->wrist_y_encoder.Get());
-  //rc->arm_degrees = t34::EncoderToDegree(4096.0, rc->arm_encoder->GetAbsolutePosition());
   rc->correction_val = t34::CorrectionValue(0.0, rc->wrist_degrees) * -1.0;
-  //frc::SmartDashboard::PutNumber("W Distance per pulse", rc->wrist_y_encoder->GetDistancePerPulse());
-  //frc::SmartDashboard::PutNumber("W Current Position", rc->wrist_degrees);
-  //frc::SmartDashboard::PutNumber("A Distance per pulse", rc->arm_encoder->GetDistancePerPulse());
-  //frc::SmartDashboard::PutNumber("A Current Position", rc->arm_degrees);
   
   //  Setting the speed of the wrist_Y motor based on PID 
   //rc->m_wrist_y->Set(ctre::phoenix::motorcontrol::ControlMode::PercentOutput, rc->wrist_y_pid.Calculate(rc->correction_val) * -0.2);
-  /*
-  frc::SmartDashboard::PutNumber("W Motor Current", rc->m_wrist_y->GetOutputCurrent());
-  frc::SmartDashboard::PutNumber("Wrist Pitch (degrees)", rc->wrist_degrees);
-  frc::SmartDashboard::PutNumber("Wrist Rot", rc->wrist_rot_encoder->Get());
-  frc::SmartDashboard::PutNumber("Correction Val", rc->correction_val);
-  frc::SmartDashboard::PutNumber("Wrist Pitch PID Setpoint", rc->wrist_y_pid.GetSetpoint());
-  frc::SmartDashboard::PutNumber("Wrist PID calc", rc->wrist_y_pid.Calculate(rc->wrist_degrees, -90.0));
-  frc::SmartDashboard::PutNumber("Wrist Rotation PID Setpoint", rc->wrist_rot_pid.GetSetpoint());
-  frc::SmartDashboard::PutNumber("Encoder Distance", rc->wrist_y_encoder->GetDistance());
-  frc::SmartDashboard::PutNumber("Wrist Pitch Current", rc->m_wrist_y->GetOutputCurrent());
-  
-*/
+ 
   frc::SmartDashboard::PutNumber("Encoder Val, LA", rc->m_drive->m_la.encoder.GetAbsolutePosition());
   frc::SmartDashboard::PutNumber("Encoder Val, LF", rc->m_drive->m_lf.encoder.GetAbsolutePosition());
   frc::SmartDashboard::PutNumber("Encoder Val, RA", rc->m_drive->m_ra.encoder.GetAbsolutePosition());
   frc::SmartDashboard::PutNumber("Encoder Val, RF", rc->m_drive->m_rf.encoder.GetAbsolutePosition());
-  
- //  frc::SmartDashboard::PutNumber("Encoder Val, RF", cc.GetPosition());
-
 }
 
 /**
@@ -98,7 +77,10 @@ void Robot::AutonomousInit()
 {}
 
 void Robot::AutonomousPeriodic() 
-{}
+{
+  auto rc = RobotContainer::get();
+  rc->m_wrist_y.Set(ControlMode::Position, rc->wrist_y_pid.Calculate(rc->wrist_degrees, 0.0));
+}
 
 void Robot::TeleopInit() 
 {
@@ -120,14 +102,7 @@ void Robot::TeleopPeriodic()
   double rightstick_y = rc->m_driver_control->getRightStickYDB();
   double rightstick_x = rc->m_driver_control->getRightStickXDB();
   double arm_setPoint = 0.0;
-
-  /*
-  if(rc->m_driver_control->GetRightBumperPressed())
-    arm_setPoint += 5.0;
-  
-  if(rc->m_driver_control->GetLeftBumperPressed())
-    arm_setPoint -= 5.0;
-  */
+  rc->m_wrist_y.Set(ControlMode::Position, rc->wrist_y_pid.Calculate(rc->wrist_degrees, 0.0));
 
     //rc->arm_y_pid.SetSetpoint(arm_setPoint);
     //rc->m_arm->Set(ControlMode::Position, rc->arm_y_pid.Calculate(armdegrees, 180) * 0.2);
@@ -160,21 +135,12 @@ void Robot::TeleopPeriodic()
 
   //  Arm Pitch Control, ctre, Right Stick Y
  // rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y);
-  rc->m_wrist_rot.Set(ControlMode::PercentOutput, rightstick_x);
-
-  // if (rc->m_driver_control->GetLeftBumperPressed())
-  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.7);
-  // else if (rc->m_driver_control->GetRightBumperPressed())
-  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.7);
-  // else
-  //   rc->m_wrist_rot.Set(ControlMode::PercentOutput, 0.0);
-
-//     rc->m_arm->Set(ControlMode::PercentOutput, rightstick_y * 0.4);
-
-//frc::SmartDashboard::PutNumber("Motor Current", rc->m_arm_ext.GetOutputCurrent());
-//frc::SmartDashboard::PutNumber("Right stick y", rightstick_y);
-    //rc->m_arm->Set(ControlMode::Position, arm_pitch_setpoint);
-
+  /*if (rc->m_limit_switch_front.Get() && rc->m_arm_ext.GetMotorOutputPercent() >= 0.1)
+    rc->m_arm_ext.Set(ControlMode::PercentOutput, 0.0);
+  else if (rc->m_limit_switch_back.Get() && rc->m_arm_ext.GetMotorOutputPercent() <= -0.1)
+    rc->m_arm_ext.Set(ControlMode::PercentOutput, 0.0);
+  else*/
+  rc->m_arm->Set(ControlMode::PercentOutput, rightstick_x * 0.5);
 
   //  Wrist Pitch Control, D-Pad left & right
    

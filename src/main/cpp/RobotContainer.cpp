@@ -43,25 +43,19 @@ RobotContainer::RobotContainer()
     , wrist_rot_pid(frc2::PIDController(0.05, 0.0, 0.0))
     , arm_y_pid(frc2::PIDController(0.05, 0.0, 0.0))
     , arm_ext_pid(frc2::PIDController(0.05, 0.0, 0.0)) 
-    , m_arm_ext(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless) 
-    //, arm_encoder(0)
+    , m_arm_ext(TalonSRX(ID_ARM_EXT_MOTOR)) 
     , m_wrist_y(TalonSRX(ID_WRIST_Y_MOTOR))
     , m_wrist_rot(TalonSRX(ID_WRIST_ROT_MOTOR))
     , wrist_y_encoder(0,1)
     , wrist_rot_encoder(2,3)
-    , T34ArmEncoder(0){
+    , T34ArmEncoder(0)
+    , m_limit_switch_back(5)
+    , m_limit_switch_front(4){
 
     m_arm.reset(new TalonFX(ID_ARM_PITCH_MOTOR));
-    //m_arm_ext//.reset(new rev::CANSparkMax(ID_ARM_EXT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless));
+    m_arm->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
 
-    //m_wrist_y.reset(new TalonSRX(ID_WRIST_Y_MOTOR));
-    //m_wrist_rot.reset(new TalonSRX(ID_WRIST_ROT_MOTOR));
-
-    //RobotContainer::arm_ext_encoder.reset(new rev::SparkMaxRelativeEncoder(m_arm_ext)));
-    //arm_encoder.reset(new frc::AnalogEncoder(0));
-   
-
-    //wrist_y_encoder->SetDistancePerPulse(360.0 / 44.4);
+    armSub.TelemetryOn();
 
     SlotConfiguration arm_slot;
     m_arm->GetSlotConfigs(arm_slot);
@@ -72,10 +66,6 @@ RobotContainer::RobotContainer()
     arm_slot.allowableClosedloopError = 2.0;
     arm_slot.closedLoopPeakOutput = 1.0;
 
-    m_arm->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
-    //m_arm->ConfigRemoteFeedbackFilter(ID_ENCODER_ARM_PITCH, RemoteSensorSource::RemoteSensorSource_TalonFX_SelectedSensor, 0, 0);
-    //m_arm->ConfigSelectedFeedbackSensor(FeedbackDevice::);
-    //m_arm->ConfigureSlot(arm_slot, 0, 0);
 
     p_grip_solenoid.reset(new frc::Solenoid(frc::PneumaticsModuleType::CTREPCM, 0));
     p_grip_compressor.reset(new frc::Compressor(0, frc::PneumaticsModuleType::CTREPCM));
