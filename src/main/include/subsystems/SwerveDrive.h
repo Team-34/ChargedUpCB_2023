@@ -57,7 +57,8 @@ namespace t34 {
 
             // Configure Drive Motor
             drive.ConfigFactoryDefault();
-            drive.SetNeutralMode(NeutralMode::Coast);
+            // drive.ConfigOpenloopRamp(1.0);
+            // drive.ConfigClosedloopRamp(1.0);
             setDriveBrake(true);
         }
 

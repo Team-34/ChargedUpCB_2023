@@ -21,6 +21,7 @@ namespace t34 {
 
         setDriveMode(DriveMode::FieldOriented);
 
+        m_gyro.ZeroYaw();
     }
 
     SwerveDrive::~SwerveDrive() {}
@@ -28,6 +29,7 @@ namespace t34 {
     void SwerveDrive::zeroYaw() {
 
         //if (m_gyro != nullptr)
+        
         m_gyro.ZeroYaw();
 
     }
@@ -96,7 +98,7 @@ namespace t34 {
         if (m_mode == DriveMode::FieldOriented) 
         { 
               
-            double gyro_radians = deg_to_rad(m_gyro.GetYaw());
+            double gyro_radians = -deg_to_rad(m_gyro.GetYaw());
             double temp_y = y * cos(gyro_radians) + -x * sin(gyro_radians);
             x = y * sin(gyro_radians) + x * cos(gyro_radians);
             y = temp_y;       

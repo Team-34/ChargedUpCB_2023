@@ -19,15 +19,19 @@
 #include <frc/Compressor.h>
 #include <frc/Solenoid.h>
 #include <frc/DigitalInput.h>
+#include <chrono>
+#include <cameraserver/CameraServer.h>
+#include <frc/filter/SlewRateLimiter.h>
 
 #include "Constants.h"
-#include "subsystems/SwerveDrive.h"
+#include "subsystems/SwerveDrive.h" 
 #include "subsystems/ExampleSubsystem.h"
 #include "utils/T34XboxController.h"
 #include "commands/CMD_DefaultDrive.h"
 #include "subsystems/ClawSubsystem.h"
-#include "T34AnalogEncoder.h"
+#include "ArmAbsEncoder.h"
 #include "subsystems/ArmSubsystem.h"
+#include "commands/CMD_DriveStraight.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -43,37 +47,48 @@ class RobotContainer
 
     //frc::AnalogEncoder arm_encoder;
     TalonSRX m_arm_ext;
-    TalonSRX m_wrist_y;
-    TalonSRX m_wrist_rot;
-    frc::Encoder wrist_y_encoder;
-    frc::Encoder wrist_rot_encoder;
+    TalonFX m_arm;
+    rev::CANSparkMax m_wrist_y;
+    rev::CANSparkMax m_wrist_rot;
+
+    cs::UsbCamera m_front_cam;
+
+    rev::SparkMaxRelativeEncoder wrist_y_encoder;
+    rev::SparkMaxRelativeEncoder wrist_rot_encoder;
+
     frc::DigitalInput m_limit_switch_back;
     frc::DigitalInput m_limit_switch_front;
-    T34AnalogEncoder T34ArmEncoder;
-    ArmSubsystem armSub;
 
+    ArmAbsEncoder m_arm_abs_encoder;
+    ArmSubsystem armSub;
+    
     frc2::PIDController wrist_y_pid;
     frc2::PIDController wrist_rot_pid;
     frc2::PIDController arm_y_pid;
     frc2::PIDController arm_ext_pid;
 
     bool pneumatics_running;
-    bool wristRotTog;
+    bool wristTog;
     bool drive_braking;
-    double wrist_degrees;
+    double wrist_y_degrees;
+    double wrist_rot_degrees;
     double arm_degrees;
     double correction_val;
     
     std::shared_ptr<t34::T34XboxController> m_driver_control;
     std::shared_ptr<t34::SwerveDrive> m_drive; 
-    std::shared_ptr<TalonFX> m_arm;
     std::shared_ptr<rev::SparkMaxRelativeEncoder> arm_ext_encoder;
     std::shared_ptr<frc::Solenoid> p_grip_solenoid;
     std::shared_ptr<frc::Compressor> p_grip_compressor;
 
+    //std::chrono::sys_seconds start_sec;
+    //std::chrono::sys_seconds end_sec;
+
+
     //  COMMANDS
     t34::DefaultDriveCommand m_default_command;
     frc2::CommandPtr GetAutonomousCommand();
+    static std::shared_ptr<frc2::Command> m_autonomousCommand;
 
  private:
     RobotContainer();

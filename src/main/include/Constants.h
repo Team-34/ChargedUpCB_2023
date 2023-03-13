@@ -40,6 +40,8 @@ namespace t34
     #define ID_WRIST_ROT_MOTOR      13 //talon 2
     #define ID_ARM_EXT_MOTOR        14 
 
+    #define ID_ARM_ABS_ENCODER      0   // Analog
+
     //  Ramp Limiters       //
     #define RAMP_LIMIT_X            1.0
     #define RAMP_LIMIT_Y            1.0
@@ -73,12 +75,17 @@ namespace t34
     constexpr double RF_STEER_OFFSET {  -37.0  };
     constexpr double ARM_FULL_UNITS  { 2048.0 * 32.0 };
 
+    constexpr double ARM_PITCH_VAL  { 1.0 };
+    constexpr double WRIST_PITCH_VAL  {};
+    constexpr double WRIST_ROT_VAL  {};
+
 
     //constexpr double FULL_UNITS{ 26214.4 };
     constexpr double FULL_UNITS{ 4096.0 };
     constexpr double NEO550_FULL_UNITS{ 42.0 };
     //constexpr double UNITS_PER_INCH{ 1331.52715655 };
     constexpr double UNITS_PER_INCH{ 208.051118211 };
+    constexpr double UNITS_PER_FOOT{ 2496.613418532 };
     constexpr double ABS_TO_IS{  FULL_UNITS/4096.0  };
     constexpr double inches_to_mm(double inches) { return inches / 0.03937008; }
     /*

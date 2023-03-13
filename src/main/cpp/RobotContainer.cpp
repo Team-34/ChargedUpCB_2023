@@ -41,24 +41,27 @@ RobotContainer::RobotContainer()
     , m_default_command(m_drive, m_driver_control) 
     , wrist_y_pid(frc2::PIDController(0.05, 0.0, 0.0))
     , wrist_rot_pid(frc2::PIDController(0.05, 0.0, 0.0))
-    , arm_y_pid(frc2::PIDController(0.05, 0.0, 0.0))
+    , arm_y_pid(frc2::PIDController(0.01, 0.0, 0.0001))
     , arm_ext_pid(frc2::PIDController(0.05, 0.0, 0.0)) 
     , m_arm_ext(TalonSRX(ID_ARM_EXT_MOTOR)) 
-    , m_wrist_y(TalonSRX(ID_WRIST_Y_MOTOR))
-    , m_wrist_rot(TalonSRX(ID_WRIST_ROT_MOTOR))
-    , wrist_y_encoder(0,1)
-    , wrist_rot_encoder(2,3)
-    , T34ArmEncoder(0)
+    , m_wrist_y(rev::CANSparkMax(ID_WRIST_Y_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless))
+    , m_wrist_rot(rev::CANSparkMax(ID_WRIST_ROT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless))
+    , wrist_y_encoder(m_wrist_y.GetEncoder())
+    , wrist_rot_encoder(m_wrist_rot.GetEncoder())
+    , m_arm_abs_encoder(ID_ARM_ABS_ENCODER)
     , m_limit_switch_back(5)
-    , m_limit_switch_front(4){
+    , m_limit_switch_front(4)
+    , m_arm(ID_ARM_PITCH_MOTOR)
+    , m_front_cam("FRONT CAM", 0)
+    //, start_sec() 
+    {
 
-    m_arm.reset(new TalonFX(ID_ARM_PITCH_MOTOR));
-    m_arm->ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
+    m_arm.ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
 
     armSub.TelemetryOn();
 
     SlotConfiguration arm_slot;
-    m_arm->GetSlotConfigs(arm_slot);
+    m_arm.GetSlotConfigs(arm_slot);
     arm_slot.kP = 0.4;
     arm_slot.kI = 0.0;
     arm_slot.kD = 0.0;
@@ -76,9 +79,12 @@ RobotContainer::RobotContainer()
     
 
     drive_braking = false;
-    wrist_degrees = 0.0 ;
+    wrist_y_degrees = 0.0 ;
+    wrist_rot_degrees = 0.0 ;
     arm_degrees = 0.0 ;
     correction_val = 0.0 ;
+
+    //std::shared_ptr<frc2::Command> m_autonomousCommand{ nullptr };
 
     // Configure the button bindings
     ConfigureBindings();

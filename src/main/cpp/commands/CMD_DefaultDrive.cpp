@@ -23,7 +23,7 @@ namespace t34
             (
             -m_driver_control->getLeftStickXDB(), 
             -m_driver_control->getLeftStickYDB(), 
-            m_driver_control->getTriggersCoercedDB()
+            -m_driver_control->getTriggersCoercedDB()
             );
       
     }
