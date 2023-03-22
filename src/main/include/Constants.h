@@ -79,12 +79,16 @@ namespace t34
     constexpr double WRIST_PITCH_VAL  {};
     constexpr double WRIST_ROT_VAL  {};
 
+    const std::string kAutoNameDefault = "Default";
+    const std::string kAutoNameCustom = "My Auto";
 
     //constexpr double FULL_UNITS{ 26214.4 };
     constexpr double FULL_UNITS{ 4096.0 };
     constexpr double NEO550_FULL_UNITS{ 42.0 };
     //constexpr double UNITS_PER_INCH{ 1331.52715655 };
-    constexpr double UNITS_PER_INCH{ 208.051118211 };
+    //constexpr double UNITS_PER_INCH{ 208.051118211 };
+    constexpr double UNITS_PER_INCH{ 1326.6106 };
+    constexpr double UNIT_PER_DRIVE_WHEEL{  16670.72  };
     constexpr double UNITS_PER_FOOT{ 2496.613418532 };
     constexpr double ABS_TO_IS{  FULL_UNITS/4096.0  };
     constexpr double inches_to_mm(double inches) { return inches / 0.03937008; }
@@ -142,3 +146,9 @@ namespace t34
  * Red With Black Stripe = POWER
  * White With Black Stripe = 0
 *********************/
+
+/*
+
+
+
+*/

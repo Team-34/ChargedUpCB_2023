@@ -9,7 +9,6 @@
 #include "Constants.h"
 #include "commands/Autos.h"
 #include "commands/ExampleCommand.h"
-
 // std::shared_ptr<TalonSRX> RobotContainer::m_arm{ nullptr };
 // std::shared_ptr<TalonSRX> RobotContainer::m_wrist_y{ nullptr };
 // std::shared_ptr<TalonSRX> RobotContainer::m_wrist_rot{ nullptr };
@@ -43,16 +42,24 @@ RobotContainer::RobotContainer()
     , wrist_rot_pid(frc2::PIDController(0.05, 0.0, 0.0))
     , arm_y_pid(frc2::PIDController(0.01, 0.0, 0.0001))
     , arm_ext_pid(frc2::PIDController(0.05, 0.0, 0.0)) 
+    , drive_pid(frc::PIDController(0.1, 0.0, 0.0))
     , m_arm_ext(TalonSRX(ID_ARM_EXT_MOTOR)) 
     , m_wrist_y(rev::CANSparkMax(ID_WRIST_Y_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless))
     , m_wrist_rot(rev::CANSparkMax(ID_WRIST_ROT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless))
     , wrist_y_encoder(m_wrist_y.GetEncoder())
     , wrist_rot_encoder(m_wrist_rot.GetEncoder())
+    , arm_ext_encoder(ID_ENCODER_ARM_EXT)
     , m_arm_abs_encoder(ID_ARM_ABS_ENCODER)
     , m_limit_switch_back(5)
     , m_limit_switch_front(4)
     , m_arm(ID_ARM_PITCH_MOTOR)
     , m_front_cam("FRONT CAM", 0)
+    , navX(frc::SPI::Port::kMXP)
+    //, table(nt::NetworkTableInstance::GetDefault().GetTable("limelight"))
+    //, targetOffsetAngle_Horizontal(table->GetNumber("tx",0.0))
+    //, targetOffsetAngle_Vertical(table->GetNumber("ty",0.0))
+    //, targetArea(table->GetNumber("ta",0.0))
+    //, targetSkew(table->GetNumber("ts",0.0))
     //, start_sec() 
     {
 
@@ -109,6 +116,7 @@ frc2::CommandPtr RobotContainer::GetAutonomousCommand()
   // An example command will be run in autonomous
   return autos::ExampleAuto(&m_subsystem);
 }
+
 
 /*double RobotContainer::T34AnalogInput::GetAbsoluteArmPitch() 
 {

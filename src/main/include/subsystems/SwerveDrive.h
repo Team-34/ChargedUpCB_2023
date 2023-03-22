@@ -11,6 +11,9 @@
 #include <ctre/Phoenix.h>
 #include <frc2/command/SubsystemBase.h>
 #include <ctre/phoenix/sensors/CANCoder.h>
+#include <frc/filter/SlewRateLimiter.h>
+#include <units/voltage.h>
+#include <units/base.h>
 
 
 namespace t34 {
@@ -149,9 +152,12 @@ namespace t34 {
         AHRS m_gyro;
         double m_heading_offset;
         DriveMode m_mode;
-        
-
-
+/*        
+        frc::SlewRateLimiter<double> la_sr{0.5};
+        frc::SlewRateLimiter<double> ra_sr{0.5};
+        frc::SlewRateLimiter<double> lf_sr{0.5};
+        frc::SlewRateLimiter<double> rf_sr{0.5};
+*/
         bool m_drive_brake_on;
 
         double m_db;
