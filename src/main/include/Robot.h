@@ -27,6 +27,8 @@ class Robot : public frc::TimedRobot {
   void SimulationPeriodic() override;
 
  private:
+  bool arm_can_extend = true;
+  bool arm_can_retract = false;
 
   std::optional<frc2::CommandPtr> m_autonomousCommand;
 

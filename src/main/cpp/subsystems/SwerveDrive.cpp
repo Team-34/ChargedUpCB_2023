@@ -1,5 +1,7 @@
 #include "subsystems/SwerveDrive.h"
+
 #include <frc/smartdashboard/SmartDashboard.h>
+
 #include <iostream>
 
 namespace t34 {
@@ -12,8 +14,14 @@ namespace t34 {
         , m_ra(SwerveModule("Right_Back",  ID_RIGHT_AFT_DRIVE, ID_RIGHT_AFT_STEER, 1.0, ID_ENCODER_RIGHT_AFT, RA_STEER_OFFSET))
         , m_drive_brake_on(true) 
         , m_db(0.2)
+        , m_speed(1.0)
+        {
 
-        , m_speed(1.0) {
+        //ramp limiter here!!!! For Ethan <3
+        m_lf.drive.ConfigOpenloopRamp(1.0);
+        m_la.drive.ConfigOpenloopRamp(1.0);
+        m_rf.drive.ConfigOpenloopRamp(1.0);
+        m_ra.drive.ConfigOpenloopRamp(1.0);
 
         SetName("SwerveDrive");
 
@@ -81,10 +89,12 @@ namespace t34 {
         //Deadband
         if (fabs(x) < m_db && fabs(y) < m_db && fabs(r) < m_db) 
         {
+            
             m_lf.drive.Set(ControlMode::PercentOutput, 0.0);
             m_la.drive.Set(ControlMode::PercentOutput, 0.0);
             m_rf.drive.Set(ControlMode::PercentOutput, 0.0);
             m_ra.drive.Set(ControlMode::PercentOutput, 0.0);
+
             return;
         }
 
@@ -171,7 +181,12 @@ namespace t34 {
     }
 
     
-    void SwerveDrive::Periodic() {}
+    void SwerveDrive::Periodic() {
+        frc::SmartDashboard::PutNumber("lf encoder", m_lf.encoder.GetAbsolutePosition());
+        frc::SmartDashboard::PutNumber("la encoder", m_la.encoder.GetAbsolutePosition());
+        frc::SmartDashboard::PutNumber("rf encoder", m_rf.encoder.GetAbsolutePosition());
+        frc::SmartDashboard::PutNumber("ra encoder", m_ra.encoder.GetAbsolutePosition());
+    }
 
     void SwerveDrive::resetOdometer() {
         int error = m_lf.drive.SetSelectedSensorPosition(0.0) +

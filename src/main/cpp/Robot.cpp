@@ -26,6 +26,7 @@ void Robot::RobotInit()
   frc::SmartDashboard::PutData("Auto Modes", &rc->m_chooser);
 
   rc->m_drive->resetOdometer();
+  rc->m_drive->setDriveBrake(true);
 
   rc->m_wrist_y.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
   rc->m_wrist_rot.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
@@ -41,6 +42,16 @@ void Robot::RobotInit()
   rc->wrist_rot_encoder.SetPositionConversionFactor(1.0);
   rc->wrist_y_encoder.SetPosition(-24.0);
   rc->wrist_rot_encoder.SetPosition(0.0);
+
+
+  rc->m_wrist_y.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
+  rc->m_wrist_y.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
+  rc->m_wrist_y.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0.0);
+  rc->m_wrist_y.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -60.0);
+  rc->m_arm_ext.ConfigForwardSoftLimitEnable(false);
+  rc->m_arm_ext.ConfigReverseSoftLimitEnable(false);
+  rc->m_arm_ext.ConfigForwardSoftLimitThreshold(-5484.0);
+  rc->m_arm_ext.ConfigReverseSoftLimitThreshold(0.0);
   
   rc->p_grip_solenoid->Set(0);
   rc->p_grip_compressor->Enabled();
@@ -61,29 +72,39 @@ void Robot::RobotPeriodic()
   frc2::CommandScheduler::GetInstance().Run();
   auto rc = RobotContainer::get();
 
+  ///////Issues \/
+  
+  if (rc->arm_ext_encoder.GetDistance() >= 0.0) {
+   arm_can_retract = false;
+  }
+  else {
+    arm_can_retract = true;
+  }
+
+  if (rc->arm_ext_encoder.GetDistance() <= -5000.0) {
+   arm_can_extend = false;
+  }
+  else {
+    arm_can_extend = true;
+  }
+
   frc::SmartDashboard::PutData(&rc->m_chooser);
 
-  //rc->targetOffsetAngle_Horizontal = rc->table->GetNumber("tx",0.0);
-  //rc->targetOffsetAngle_Vertical = rc->table->GetNumber("ty",0.0);
-  //rc->targetArea = rc->table->GetNumber("ta",0.0);
-  //rc->targetSkew = rc->table->GetNumber("ts",0.0);
+  frc::SmartDashboard::PutNumber("Encoder Counts", rc->wrist_y_encoder.GetCountsPerRevolution());
+  frc::SmartDashboard::PutNumber("Encoder Cvt Factor", rc->wrist_y_encoder.GetPositionConversionFactor());
+  frc::SmartDashboard::PutNumber("Wrist Y Encoder Units", rc->wrist_y_encoder.GetPosition());
+  frc::SmartDashboard::PutNumber("Wrist Rot Encoder Units", rc->wrist_rot_encoder.GetPosition());
 
- /*
- //   Output Drive Encoder to SmartDashBoard
-  frc::SmartDashboard::PutNumber("Encoder Val, LA", rc->m_drive->m_la.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, LF", rc->m_drive->m_lf.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, RA", rc->m_drive->m_ra.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder Val, RF", rc->m_drive->m_rf.encoder.GetAbsolutePosition());
-  */
-  frc::SmartDashboard::PutNumber("Odometer", rc->m_drive->getOdometer());
-  frc::SmartDashboard::PutNumber("NavX Pitch", rc->navX.GetPitch());
-/*
-//    Arm pitch and extention limit switches
-  frc::SmartDashboard::PutBoolean("Arm Ext Fwd Limit", rc->m_arm_ext.IsFwdLimitSwitchClosed());
-  frc::SmartDashboard::PutBoolean("Arm Ext Rev Limit", rc->m_arm_ext.IsRevLimitSwitchClosed());
-  frc::SmartDashboard::PutBoolean("Arm Fwd Limit", rc->m_limit_switch_front.Get());
-  frc::SmartDashboard::PutBoolean("Arm Rev Limit", rc->m_limit_switch_back.Get());
-*/
+  frc::SmartDashboard::PutNumber("Encoder steer lf", rc->m_drive->m_lf.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder steer la", rc->m_drive->m_la.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder steer rf", rc->m_drive->m_rf.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("Encoder steer ra", rc->m_drive->m_ra.encoder.GetAbsolutePosition());
+  frc::SmartDashboard::PutNumber("raw units arm ext", rc->arm_ext_encoder.Get());
+
+  frc::SmartDashboard::PutBoolean("Front LS", rc->m_limit_switch_front.Get());
+  frc::SmartDashboard::PutBoolean("Back LS", rc->m_limit_switch_back.Get());
+
+  frc::SmartDashboard::PutNumber("arm sp", rc->arm_y_pid.GetSetpoint());
 }
 
 /**
@@ -121,6 +142,7 @@ void Robot::TeleopInit()
   auto rc = RobotContainer::get();
   auto sc = rc->m_arm.GetSensorCollection();
   
+  rc->wrist_y_encoder.SetPosition(0.0);
   rc->m_drive->setDriveMode(t34::DriveMode::FieldOriented);
   sc.SetIntegratedSensorPosition(30.0);
   rc->arm_y_pid.SetSetpoint(300.0);
@@ -150,44 +172,40 @@ void Robot::TeleopPeriodic()
   double armpidout = 320.0;
   double wrpidout = 0.0;
 
-  frc::SmartDashboard::PutNumber("Encoder Counts", rc->wrist_y_encoder.GetCountsPerRevolution());
-  frc::SmartDashboard::PutNumber("Encoder Cvt Factor", rc->wrist_y_encoder.GetPositionConversionFactor());
-  frc::SmartDashboard::PutNumber("Wrist Y Encoder Units", rc->wrist_y_encoder.GetPosition());
-  frc::SmartDashboard::PutNumber("Wrist Rot Encoder Units", rc->wrist_rot_encoder.GetPosition());
 
   frc::SmartDashboard::PutNumber("Wrist Pitch", w_pitch);
   frc::SmartDashboard::PutNumber("Wrist Rotation", w_rotation);
-
-  frc::SmartDashboard::PutBoolean("Front LS", rc->m_limit_switch_front.Get());
-  frc::SmartDashboard::PutBoolean("Back LS", rc->m_limit_switch_back.Get());
-
   frc::SmartDashboard::PutNumber("arm pitch", armdegrees);
-  frc::SmartDashboard::PutNumber("arm sp", rc->arm_y_pid.GetSetpoint());
 
 
   //  Wrist Control, D-pad
   switch (pov)
   {
     case 0:
-      w_degrees++;
+      w_degrees = w_degrees + 5;
       break;
 
     case 180:
-      w_degrees--;
+      w_degrees = w_degrees - 5;
       break;
     
     case 90:
-      w_rot_degrees++;
+      w_rot_degrees = w_rot_degrees + 5;
       break;
     case 270:
-      w_rot_degrees--;
+      w_rot_degrees = w_rot_degrees - 5;
       break;
   }
 
-  if (w_degrees < -90.0)
-    w_degrees = -90.0;
-  if (w_degrees > 0.0)
-    w_degrees = 0.0;
+  if (rc->m_driver_control->GetAButton())
+  {
+    rc->m_drive->toggleSpeed();
+  }
+
+  // if (w_degrees < -90.0)
+  //   w_degrees = -90.0;
+  // if (w_degrees > 0.0)
+  //   w_degrees = 0.0;
 
   frc::SmartDashboard::PutNumber("w_deg", w_degrees);
   frc::SmartDashboard::PutNumber("w_rot_deg", w_rot_degrees);
@@ -241,11 +259,19 @@ void Robot::TeleopPeriodic()
 
       }
   }
-  rc->m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->arm_y_pid.Calculate(armdegrees), -0.5, 0.5));
+  //rc->m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->arm_y_pid.Calculate(armdegrees), -0.5, 0.5));
 
 
   //  ARM EXT CONTROL
-  rc->m_arm_ext.Set(ControlMode::PercentOutput, -rightstick_y);
+  auto r_y = -rightstick_y * 0.5;
+  if (r_y > 0.0 && arm_can_extend)
+    rc->m_arm_ext.Set(ControlMode::PercentOutput, r_y);
+  
+  else if (arm_can_retract)
+    rc->m_arm_ext.Set(ControlMode::PercentOutput, r_y);
+
+  if (rc->m_arm_ext.IsRevLimitSwitchClosed())
+    rc->arm_ext_encoder.Reset();
 }
 
 /**
@@ -272,3 +298,5 @@ int main()
   return frc::StartRobot<Robot>();
 }
 #endif
+
+//  TODO: Fix swerve jank, correct arm's fall during rotation, organize code

@@ -39,17 +39,6 @@ namespace t34
         //double rotation = (rc->m_drive->getYaw()) * m_rotationSpeed;
         rc->m_drive->drive(0.0 /*m_speed*/, d_pid, 0.0);
         frc::SmartDashboard::PutNumber("pid output", d_pid);
-        /*
-        RobotContainer::m_drive->m_la->steer->Set(ControlMode::PercentOutput, 0.0);
-        RobotContainer::m_drive->m_lf->steer->Set(ControlMode::PercentOutput, 0.0);
-        RobotContainer::m_drive->m_ra->steer->Set(ControlMode::PercentOutput, 0.0);
-        RobotContainer::m_drive->m_rf->steer->Set(ControlMode::PercentOutput,0.0);
-        */
-        // rc->m_drive->m_la.drive.Set(ControlMode::PercentOutput, m_speed);
-        // rc->m_drive->m_lf.drive.Set(ControlMode::PercentOutput, m_speed);
-        // rc->m_drive->m_ra.drive.Set(ControlMode::PercentOutput, m_speed);
-        // rc->m_drive->m_rf.drive.Set(ControlMode::PercentOutput, m_speed);
-        
     }
 
     bool CMD_DriveStraightDistance::IsFinished()

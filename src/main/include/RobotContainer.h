@@ -71,7 +71,7 @@ class RobotContainer
     frc::DigitalInput m_limit_switch_front;
 
 
-    frc::AnalogEncoder arm_ext_encoder;
+    frc::Encoder arm_ext_encoder;
     ArmAbsEncoder m_arm_abs_encoder;
     ArmSubsystem armSub;
     

@@ -14,6 +14,7 @@
 #include <frc/filter/SlewRateLimiter.h>
 #include <units/voltage.h>
 #include <units/base.h>
+#include <frc/controller/PIDController.h>
 
 
 namespace t34 {
@@ -31,7 +32,8 @@ namespace t34 {
             , encoder(encoder_id) 
             , zero_offset(offset)
             , invert_value(invert)  
-            , module_name(name) {
+            , module_name(name)
+             {
 
             SlotConfiguration slot;
             steer.GetSlotConfigs(slot);
@@ -60,8 +62,6 @@ namespace t34 {
 
             // Configure Drive Motor
             drive.ConfigFactoryDefault();
-            // drive.ConfigOpenloopRamp(1.0);
-            // drive.ConfigClosedloopRamp(1.0);
             setDriveBrake(true);
         }
 
@@ -76,6 +76,7 @@ namespace t34 {
         {
             double current_position = encoder.GetAbsolutePosition();
             double set_point = (position + 180.0) / 360.0 * FULL_UNITS;
+            frc::PIDController steer_pid( 0.5, 0.0, 0.0 );
             
             double delta = fmod(set_point - current_position, FULL_UNITS);
 
@@ -87,9 +88,8 @@ namespace t34 {
              else 
                  invert_value = 1.0;
         
-            steer.Set(ControlMode::Position, current_position + delta +  (offset < 2048.0 ? -offset : offset));
+            steer.Set(ControlMode::Position, steer_pid.Calculate(current_position + delta +  (offset < 2048.0 ? -offset : offset)));
         }
-
 
         TalonFX drive;
         TalonFX steer;
@@ -152,12 +152,12 @@ namespace t34 {
         AHRS m_gyro;
         double m_heading_offset;
         DriveMode m_mode;
-/*        
+        /*
         frc::SlewRateLimiter<double> la_sr{0.5};
         frc::SlewRateLimiter<double> ra_sr{0.5};
         frc::SlewRateLimiter<double> lf_sr{0.5};
         frc::SlewRateLimiter<double> rf_sr{0.5};
-*/
+        */
         bool m_drive_brake_on;
 
         double m_db;
