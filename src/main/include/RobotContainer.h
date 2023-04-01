@@ -7,8 +7,6 @@
 #include <frc2/command/CommandPtr.h>
 #include <frc2/command/Command.h>
 #include <frc2/command/button/CommandXboxController.h>
-#include <rev/CANSparkMax.h>
-#include <rev/CANSparkMaxLowLevel.h>
 #include <ctre/Phoenix.h>
 #include <frc/Encoder.h>
 #include <frc/AnalogEncoder.h>
@@ -16,8 +14,6 @@
 #include <frc/controller/PIDController.h>
 #include <frc2/command/SequentialCommandGroup.h>
 #include <AHRS.h>
-#include <frc/Compressor.h>
-#include <frc/Solenoid.h>
 #include <frc/DigitalInput.h>
 #include <cameraserver/CameraServer.h>
 #include <frc/filter/SlewRateLimiter.h>
@@ -35,10 +31,9 @@
 #include "subsystems/ExampleSubsystem.h"
 #include "utils/T34XboxController.h"
 #include "commands/CMD_DefaultDrive.h"
-#include "subsystems/ClawSubsystem.h"
-#include "ArmAbsEncoder.h"
 #include "subsystems/ArmSubsystem.h"
 #include "commands/CMD_DriveStraight.h"
+#include "commands/CMD_ReturnHome.h"
 
 /**
  * This class is where the bulk of the robot should be declared.  Since
@@ -52,57 +47,31 @@ class RobotContainer
  public:
     static std::shared_ptr<RobotContainer> get();
 
-    //frc::AnalogEncoder arm_encoder;
-    TalonSRX m_arm_ext;
-    TalonFX m_arm;
-    rev::CANSparkMax m_wrist_y;
-    rev::CANSparkMax m_wrist_rot;
-
     cs::UsbCamera m_front_cam;
 
     AHRS navX;
 
     frc::SendableChooser<std::string> m_chooser;
 
-    rev::SparkMaxRelativeEncoder wrist_y_encoder;
-    rev::SparkMaxRelativeEncoder wrist_rot_encoder;
-
     frc::DigitalInput m_limit_switch_back;
     frc::DigitalInput m_limit_switch_front;
 
-
-    frc::Encoder arm_ext_encoder;
-    ArmAbsEncoder m_arm_abs_encoder;
     ArmSubsystem armSub;
-    
-    frc2::PIDController wrist_y_pid;
-    frc2::PIDController wrist_rot_pid;
-    frc2::PIDController arm_y_pid;
-    frc2::PIDController arm_ext_pid;
+
     frc2::PIDController drive_pid;
+    frc2::PIDController steer_pid;
 
 
     bool pneumatics_running;
-    bool wristTog;
+    bool zeroed_steer;
     bool drive_braking;
     double wrist_y_degrees;
     double wrist_rot_degrees;
     double arm_degrees;
     double correction_val;
-    //double targetOffsetAngle_Horizontal;
-    //double targetOffsetAngle_Vertical;
-    //double targetArea;
-    //double targetSkew;
     
     std::shared_ptr<t34::T34XboxController> m_driver_control;
     std::shared_ptr<t34::SwerveDrive> m_drive; 
-    std::shared_ptr<frc::Solenoid> p_grip_solenoid;
-    std::shared_ptr<frc::Compressor> p_grip_compressor;
-    //std::shared_ptr<nt::NetworkTable> table;
-
-    //std::chrono::sys_seconds start_sec;
-    //std::chrono::sys_seconds end_sec;
-
 
     //  COMMANDS
     t34::DefaultDriveCommand m_default_command;

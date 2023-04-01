@@ -28,35 +28,11 @@ void Robot::RobotInit()
   rc->m_drive->resetOdometer();
   rc->m_drive->setDriveBrake(true);
 
-  rc->m_wrist_y.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-  rc->m_wrist_rot.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
-  rc->m_arm.SetNeutralMode(NeutralMode::Brake);
-  rc->m_arm_ext.SetNeutralMode(Coast);
-
-  rc->m_arm_abs_encoder.Reset();
-  rc->m_arm_abs_encoder.SetDistancePerRotation(2048.0 * 32.0);
-
-  rc->wrist_y_pid.SetTolerance(2, 3);
-  rc->wrist_rot_pid.SetTolerance(2, 3);
-  rc->wrist_y_encoder.SetPositionConversionFactor(1.0);
-  rc->wrist_rot_encoder.SetPositionConversionFactor(1.0);
-  rc->wrist_y_encoder.SetPosition(-24.0);
-  rc->wrist_rot_encoder.SetPosition(0.0);
-
-
-  rc->m_wrist_y.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, true);
-  rc->m_wrist_y.EnableSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, true);
-  rc->m_wrist_y.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kForward, 0.0);
-  rc->m_wrist_y.SetSoftLimit(rev::CANSparkMax::SoftLimitDirection::kReverse, -60.0);
-  rc->m_arm_ext.ConfigForwardSoftLimitEnable(false);
-  rc->m_arm_ext.ConfigReverseSoftLimitEnable(false);
-  rc->m_arm_ext.ConfigForwardSoftLimitThreshold(-5484.0);
-  rc->m_arm_ext.ConfigReverseSoftLimitThreshold(0.0);
-  
-  rc->p_grip_solenoid->Set(0);
-  rc->p_grip_compressor->Enabled();
+  rc->armSub.p_grip_solenoid->Set(0);
+  rc->armSub.p_grip_compressor->Enabled();
 
   frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
+  //rc->m_drive->zeroIntegratedEncoders();
 }
 
 /**
@@ -71,40 +47,10 @@ void Robot::RobotPeriodic()
 {
   frc2::CommandScheduler::GetInstance().Run();
   auto rc = RobotContainer::get();
-
-  ///////Issues \/
   
-  if (rc->arm_ext_encoder.GetDistance() >= 0.0) {
-   arm_can_retract = false;
-  }
-  else {
-    arm_can_retract = true;
-  }
-
-  if (rc->arm_ext_encoder.GetDistance() <= -5000.0) {
-   arm_can_extend = false;
-  }
-  else {
-    arm_can_extend = true;
-  }
-
   frc::SmartDashboard::PutData(&rc->m_chooser);
 
-  frc::SmartDashboard::PutNumber("Encoder Counts", rc->wrist_y_encoder.GetCountsPerRevolution());
-  frc::SmartDashboard::PutNumber("Encoder Cvt Factor", rc->wrist_y_encoder.GetPositionConversionFactor());
-  frc::SmartDashboard::PutNumber("Wrist Y Encoder Units", rc->wrist_y_encoder.GetPosition());
-  frc::SmartDashboard::PutNumber("Wrist Rot Encoder Units", rc->wrist_rot_encoder.GetPosition());
-
-  frc::SmartDashboard::PutNumber("Encoder steer lf", rc->m_drive->m_lf.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder steer la", rc->m_drive->m_la.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder steer rf", rc->m_drive->m_rf.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("Encoder steer ra", rc->m_drive->m_ra.encoder.GetAbsolutePosition());
-  frc::SmartDashboard::PutNumber("raw units arm ext", rc->arm_ext_encoder.Get());
-
-  frc::SmartDashboard::PutBoolean("Front LS", rc->m_limit_switch_front.Get());
-  frc::SmartDashboard::PutBoolean("Back LS", rc->m_limit_switch_back.Get());
-
-  frc::SmartDashboard::PutNumber("arm sp", rc->arm_y_pid.GetSetpoint());
+  arm_degrees = rc->armSub.m_arm_abs_encoder.GetDegrees();
 }
 
 /**
@@ -120,33 +66,37 @@ void Robot::DisabledPeriodic()
 
 void Robot::AutonomousInit() 
 {
-
   auto rc = RobotContainer::get();
   rc->m_drive->zeroYaw();
   rc->m_drive->resetOdometer();
   rc->m_drive->setDriveMode(t34::DriveMode::FieldOriented);
 
+
   frc2::CommandScheduler::GetInstance().Schedule(new frc2::SequentialCommandGroup(
-    t34::CMD_Drop_Back(rc->m_chooser.GetSelected()),
-    t34::CMD_DriveStraightDistance(133.0 * t34::UNITS_PER_INCH, 0.2, 0.0)
+    t34::CMD_Drop_Back((rc->m_chooser.GetSelected()))//,
+    //t34::CMD_DriveStraightDistance(133.0 * t34::UNITS_PER_INCH, 0.2, 0.0)
   ));
 }
 
 void Robot::AutonomousPeriodic() 
 {
+  auto rc = RobotContainer::get();
+
+  //rc->armSub.ArmExtZero();
+
   frc2::CommandScheduler::GetInstance().Run();
 }
 
 void Robot::TeleopInit() 
 {
   auto rc = RobotContainer::get();
-  auto sc = rc->m_arm.GetSensorCollection();
-  
-  rc->wrist_y_encoder.SetPosition(0.0);
+  auto sc = rc->armSub.m_arm.GetSensorCollection();
+
+  rc->armSub.wrist_y_encoder.SetPosition(0.0);
   rc->m_drive->setDriveMode(t34::DriveMode::FieldOriented);
   sc.SetIntegratedSensorPosition(30.0);
-  rc->arm_y_pid.SetSetpoint(300.0);
-  rc->wristTog = false;
+  rc->armSub.arm_y_pid.SetSetpoint(333.0);
+  rc->zeroed_steer = false;
 
 }
 
@@ -157,50 +107,46 @@ void Robot::TeleopPeriodic()
 {
   auto rc = RobotContainer::get();
 
-  auto armdegrees = rc->m_arm_abs_encoder.GetDegrees();
+  //armdegrees = rc->armSub.m_arm_abs_encoder.GetDegrees() + 34.3;
 
-  auto w_rotation = (((rc->wrist_rot_encoder.GetPosition() * 100.0) / 360.0));
-  auto w_pitch = (((rc->wrist_y_encoder.GetPosition() * 70.0 ) / 360.0));
+  auto w_rotation = (((rc->armSub.wrist_rot_encoder.GetPosition() * 100.0) / 360.0));
+  auto w_pitch = (((rc->armSub.wrist_y_encoder.GetPosition() * 70.0 ) / 360.0));
 
   double rightstick_y = rc->m_driver_control->getRightStickYDB();
   double rightstick_x = rc->m_driver_control->getRightStickXDB();
 
-  double w_degrees = rc->wrist_y_encoder.GetPosition();
-  double w_rot_degrees = rc->wrist_rot_encoder.GetPosition();
-  int pov = rc->m_driver_control->GetPOV();
-
-  double armpidout = 320.0;
-  double wrpidout = 0.0;
-
+  double w_degrees = rc->armSub.wrist_y_encoder.GetPosition();
+  double w_rot_degrees = rc->armSub.wrist_rot_encoder.GetPosition();
 
   frc::SmartDashboard::PutNumber("Wrist Pitch", w_pitch);
   frc::SmartDashboard::PutNumber("Wrist Rotation", w_rotation);
-  frc::SmartDashboard::PutNumber("arm pitch", armdegrees);
 
+
+  rc->armSub.ArmExtZero();
+  
 
   //  Wrist Control, D-pad
+  int pov = rc->m_driver_control->GetPOV();
+  
   switch (pov)
-  {
-    case 0:
-      w_degrees = w_degrees + 5;
-      break;
+    {
+      case 0:
+        w_degrees = w_degrees + 5;
+        break;
 
-    case 180:
-      w_degrees = w_degrees - 5;
-      break;
-    
-    case 90:
-      w_rot_degrees = w_rot_degrees + 5;
-      break;
-    case 270:
-      w_rot_degrees = w_rot_degrees - 5;
-      break;
-  }
+      case 180:
+        w_degrees = w_degrees - 5;
+        break;
 
-  if (rc->m_driver_control->GetAButton())
-  {
-    rc->m_drive->toggleSpeed();
-  }
+      case 90:
+        w_rot_degrees = w_rot_degrees + 5;
+        break;
+      case 270:
+        w_rot_degrees = w_rot_degrees - 5;
+        break;
+    }
+  rc->armSub.m_wrist_y.Set(std::clamp(rc->armSub.wrist_y_pid.Calculate(rc->armSub.wrist_y_encoder.GetPosition(), w_degrees), -1.0, 1.0));
+  rc->armSub.m_wrist_rot.Set(std::clamp(rc->armSub.wrist_rot_pid.Calculate(rc->armSub.wrist_rot_encoder.GetPosition(), w_rot_degrees), -1.0, 1.0));
 
   // if (w_degrees < -90.0)
   //   w_degrees = -90.0;
@@ -210,13 +156,13 @@ void Robot::TeleopPeriodic()
   frc::SmartDashboard::PutNumber("w_deg", w_degrees);
   frc::SmartDashboard::PutNumber("w_rot_deg", w_rot_degrees);
 
-  rc->m_wrist_y.Set(std::clamp(rc->wrist_y_pid.Calculate(rc->wrist_y_encoder.GetPosition(), w_degrees), -1.0, 1.0));
-  rc->m_wrist_rot.Set(std::clamp(rc->wrist_rot_pid.Calculate(rc->wrist_rot_encoder.GetPosition(), w_rot_degrees), -1.0, 1.0));
+  rc->armSub.m_wrist_y.Set(std::clamp(rc->armSub.wrist_y_pid.Calculate(rc->armSub.wrist_y_encoder.GetPosition(), w_degrees), -1.0, 1.0));
+  rc->armSub.m_wrist_rot.Set(std::clamp(rc->armSub.wrist_rot_pid.Calculate(rc->armSub.wrist_rot_encoder.GetPosition(), w_rot_degrees), -1.0, 1.0));
 
 
   //  Grip Solenoid, Button X
   if (rc->m_driver_control->GetXButtonReleased())
-    rc->p_grip_solenoid->Toggle();
+    rc->armSub.p_grip_solenoid->Toggle();
 
 
   //  ZERO YAW, Y
@@ -226,52 +172,41 @@ void Robot::TeleopPeriodic()
 
   //  SheildWall & Toggle Drive Break, Button Select
   if (rc->m_driver_control->GetBackButtonReleased())
-    rc->m_drive->sheildWall();
+    rc->m_drive->shieldWall();
 
 
-  //    Arm Control
-  if (rc->m_driver_control->GetRightBumper()) {
-    if (rc->m_limit_switch_back.Get()) {
-          auto current = rc->arm_y_pid.GetSetpoint();
-
-          if (current < 44.0) {
-            rc->arm_y_pid.SetSetpoint(44.0);
-          }
-
-          else {
-            rc->arm_y_pid.SetSetpoint( current - t34::ARM_PITCH_VAL);
-          }
-    }
-
-  }
-  else if (rc->m_driver_control->GetLeftBumper()) {
-      if (rc->m_limit_switch_front.Get()) {
-          auto current = rc->arm_y_pid.GetSetpoint();
-
-          if (current > 320.0) 
-          {
-             rc->arm_y_pid.SetSetpoint(320.0);
-          }
-
-          else {
-            rc->arm_y_pid.SetSetpoint( current + t34::ARM_PITCH_VAL);
-          }
-
-      }
-  }
-  //rc->m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->arm_y_pid.Calculate(armdegrees), -0.5, 0.5));
+  //    Arm Control, Bumpers: L down  R up
+  rc->armSub.Arm_Pitch_Cntrl();
+  rc->armSub.m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->armSub.arm_y_pid.Calculate(arm_degrees), -0.5, 0.5));
 
 
-  //  ARM EXT CONTROL
+  //  ARM EXT CONTROL, Rigth Stick Y
   auto r_y = -rightstick_y * 0.5;
-  if (r_y > 0.0 && arm_can_extend)
-    rc->m_arm_ext.Set(ControlMode::PercentOutput, r_y);
-  
-  else if (arm_can_retract)
-    rc->m_arm_ext.Set(ControlMode::PercentOutput, r_y);
 
-  if (rc->m_arm_ext.IsRevLimitSwitchClosed())
-    rc->arm_ext_encoder.Reset();
+  rc->armSub.m_arm_ext.Set(ControlMode::PercentOutput, r_y);
+  //if (r_y > 0.0 && arm_can_extend)
+  //  rc->armSub.m_arm_ext.Set(ControlMode::PercentOutput, r_y);
+  //
+  //else if (arm_can_retract)
+  //  rc->armSub.m_arm_ext.Set(ControlMode::PercentOutput, r_y);
+//
+  //if (rc->armSub.m_arm_ext.IsRevLimitSwitchClosed())
+  //  rc->armSub.arm_ext_encoder.Reset();
+
+  
+  //  Select, Return arm to home pos
+  // if (rc->m_driver_control->GetBackButton())
+  // {
+  //   frc2::CommandScheduler::GetInstance().Schedule(new t34::CMD_ReturnHome());
+  //   frc2::CommandScheduler::GetInstance().Run();
+  // }
+  
+
+  //  Faris Mode Toggle, A button
+  if (rc->m_driver_control->GetAButton())
+  {
+    rc->m_drive->toggleSpeed();
+  }
 }
 
 /**

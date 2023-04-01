@@ -46,10 +46,10 @@ namespace t34
         auto rc = RobotContainer::get();
 
         if (rc->m_drive->getOdometer() /*m_encoderDriven*/ >= m_distance){
-            rc->m_drive->m_la.drive.Set(ControlMode::PercentOutput, 0);
-            rc->m_drive->m_lf.drive.Set(ControlMode::PercentOutput, 0);
-            rc->m_drive->m_ra.drive.Set(ControlMode::PercentOutput, 0);
-            rc->m_drive->m_rf.drive.Set(ControlMode::PercentOutput, 0);
+            rc->m_drive->m_la->drive->Set(ControlMode::PercentOutput, 0);
+            rc->m_drive->m_lf->drive->Set(ControlMode::PercentOutput, 0);
+            rc->m_drive->m_ra->drive->Set(ControlMode::PercentOutput, 0);
+            rc->m_drive->m_rf->drive->Set(ControlMode::PercentOutput, 0);
             std::cout << "Finished driving to distance" << std::endl;
             return true;
         }

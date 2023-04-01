@@ -11,7 +11,7 @@
 // {
 //   auto rc = RobotContainer::get();
 
-//   rc->p_grip_solenoid->Set(true);
+//   rc->armSub.p_grip_solenoid->Set(true);
 //   rc->m_wrist_y.Set(ControlMode::Position, rc->wrist_y_pid.Calculate(rc->wrist_y_degrees, 0.0));
   
 //   if (current_arm_ext <= arm_ext_setpoint)
@@ -28,6 +28,6 @@
 // {
 //   auto rc = RobotContainer::get();
 
-//   rc->p_grip_solenoid->Set(false);
+//   rc->armSub.p_grip_solenoid->Set(false);
 //   return false;
 // }

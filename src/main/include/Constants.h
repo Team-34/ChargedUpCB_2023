@@ -57,7 +57,6 @@ namespace t34
     #define ID_ENCODER_WRIST_ROT       9
     #define ID_ENCODER_WRIST_PITCH     10
 
-    //  Commands            //
 
 
 
