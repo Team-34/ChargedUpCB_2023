@@ -10,7 +10,7 @@ namespace t34 {
     void CMD_Grab::Initialize() 
     {
         auto rc = RobotContainer::get();
-        rc->armSub.p_grip_solenoid->Set(false);
+        //rc->armSub.p_grip_solenoid->Set(false);
     };
     
     void CMD_Grab::Execute() 
@@ -31,7 +31,7 @@ namespace t34 {
     {
         auto rc = RobotContainer::get();
 
-        rc->armSub.p_grip_solenoid->Set(true);
+        //rc->armSub.p_grip_solenoid->Set(true);
 
         return false;
     };

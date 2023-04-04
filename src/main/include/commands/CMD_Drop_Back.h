@@ -12,6 +12,7 @@ namespace t34 {
    std::string placement{};
 
    double setpoint{};
+   double arm_drive{};
    // Placement can be: "TOP CUBE", "MID CUBE"
 
    CMD_Drop_Back(std::string placement);

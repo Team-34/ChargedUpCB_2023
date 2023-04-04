@@ -28,7 +28,6 @@ void Robot::RobotInit()
   rc->m_drive->resetOdometer();
   rc->m_drive->setDriveBrake(true);
 
-  rc->armSub.p_grip_solenoid->Set(0);
   rc->armSub.p_grip_compressor->Enabled();
 
   frc2::CommandScheduler::GetInstance().SetDefaultCommand(rc->m_drive.get(), rc->m_default_command);
@@ -51,6 +50,11 @@ void Robot::RobotPeriodic()
   frc::SmartDashboard::PutData(&rc->m_chooser);
 
   arm_degrees = rc->armSub.m_arm_abs_encoder.GetDegrees();
+
+  frc::SmartDashboard::PutNumber("Arm degrees", rc->armSub.m_arm_abs_encoder.GetDegrees());
+  frc::SmartDashboard::PutNumber("ARM SP", rc->armSub.arm_y_pid.GetSetpoint());
+  frc::SmartDashboard::PutNumber("Wrist Enc", rc->armSub.wrist_y_encoder.GetPosition());
+  frc::SmartDashboard::PutNumber("Wrist SP", rc->armSub.wrist_y_pid.GetSetpoint());
 }
 
 /**
@@ -59,7 +63,12 @@ void Robot::RobotPeriodic()
  * robot is disabled.
  */
 void Robot::DisabledInit() 
-{}
+{
+  auto rc = RobotContainer::get();
+  rc->m_drive->setDriveBrake(false);
+  rc->armSub.m_arm.SetNeutralMode(NeutralMode::Coast);
+  
+}
 
 void Robot::DisabledPeriodic() 
 {}
@@ -70,11 +79,14 @@ void Robot::AutonomousInit()
   rc->m_drive->zeroYaw();
   rc->m_drive->resetOdometer();
   rc->m_drive->setDriveMode(t34::DriveMode::FieldOriented);
+  rc->armSub.wrist_y_encoder.SetPosition(0.0);
+
+  rc->armSub.p_grip_solenoid->Set(false);
 
 
   frc2::CommandScheduler::GetInstance().Schedule(new frc2::SequentialCommandGroup(
-    t34::CMD_Drop_Back((rc->m_chooser.GetSelected()))//,
-    //t34::CMD_DriveStraightDistance(133.0 * t34::UNITS_PER_INCH, 0.2, 0.0)
+   t34::CMD_Drop_Back((rc->m_chooser.GetSelected()))//,
+   //t34::CMD_DriveStraightDistance(133.0 * t34::UNITS_PER_INCH, 0.2, 0.0)
   ));
 }
 
@@ -97,7 +109,7 @@ void Robot::TeleopInit()
   sc.SetIntegratedSensorPosition(30.0);
   rc->armSub.arm_y_pid.SetSetpoint(333.0);
   rc->zeroed_steer = false;
-
+  rc->armSub.p_grip_solenoid->Set(false);
 }
 
 /*
@@ -106,8 +118,6 @@ void Robot::TeleopInit()
 void Robot::TeleopPeriodic() 
 {
   auto rc = RobotContainer::get();
-
-  //armdegrees = rc->armSub.m_arm_abs_encoder.GetDegrees() + 34.3;
 
   auto w_rotation = (((rc->armSub.wrist_rot_encoder.GetPosition() * 100.0) / 360.0));
   auto w_pitch = (((rc->armSub.wrist_y_encoder.GetPosition() * 70.0 ) / 360.0));
@@ -177,7 +187,7 @@ void Robot::TeleopPeriodic()
 
   //    Arm Control, Bumpers: L down  R up
   rc->armSub.Arm_Pitch_Cntrl();
-  rc->armSub.m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->armSub.arm_y_pid.Calculate(arm_degrees), -0.5, 0.5));
+  rc->armSub.m_arm.Set(ControlMode::PercentOutput, -std::clamp(rc->armSub.arm_y_pid.Calculate(arm_degrees), -0.2, 0.2));
 
 
   //  ARM EXT CONTROL, Rigth Stick Y
