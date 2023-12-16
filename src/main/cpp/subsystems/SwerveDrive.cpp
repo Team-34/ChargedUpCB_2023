@@ -6,7 +6,7 @@ namespace t34 {
     SwerveDrive::SwerveDrive() 
         : m_gyro(new AHRS(frc::SPI::Port::kMXP))
         , m_db(0.1)
-        , m_speed(0.7)
+        , m_speed(1.0)
         , m_lf(new SwerveModule("Left_Front",  ID_LEFT_FWD_DRIVE, ID_LEFT_FWD_STEER,  -1.0, ID_ENCODER_LEFT_FWD, LF_STEER_OFFSET))
         , m_la(new SwerveModule("Left Back",   ID_LEFT_AFT_DRIVE, ID_LEFT_AFT_STEER,  -1.0, ID_ENCODER_LEFT_AFT, LA_STEER_OFFSET))
         , m_rf(new SwerveModule("Right_Front", ID_RIGHT_FWD_DRIVE, ID_RIGHT_FWD_STEER, 1.0, ID_ENCODER_RIGHT_FWD, RF_STEER_OFFSET))
@@ -75,7 +75,6 @@ namespace t34 {
     }
 
     void setSteerPosition(std::shared_ptr<SwerveModule> sm, const double& position, double offset = 0.0) {
-
         double current_position = sm->steer->GetSelectedSensorPosition() ;
         double set_point = ((position + 180) / 360.0) * 26214.4;
 //        double set_point = (((position + sm->zero_offset) + 180) / 360.0) * 26214.4;
@@ -226,7 +225,7 @@ namespace t34 {
         double rf = m_rf->steer->GetSelectedSensorPosition();
         double ra = m_ra->steer->GetSelectedSensorPosition();
 
-        /*frc::SmartDashboard::PutNumber(m_lf->module_name + " CSPR", lf);
+        frc::SmartDashboard::PutNumber(m_lf->module_name + " CSPR", lf);
         frc::SmartDashboard::PutNumber(m_la->module_name + " CSPR", la);
         frc::SmartDashboard::PutNumber(m_rf->module_name + " CSPR", rf);
         frc::SmartDashboard::PutNumber(m_ra->module_name + " CSPR", ra);
@@ -244,7 +243,7 @@ namespace t34 {
         frc::SmartDashboard::PutNumber(m_lf->module_name + " CStP", m_lf->steer->GetSelectedSensorPosition());
         frc::SmartDashboard::PutNumber(m_la->module_name + " CStP", m_la->steer->GetSelectedSensorPosition());
         frc::SmartDashboard::PutNumber(m_rf->module_name + " CStP", m_rf->steer->GetSelectedSensorPosition());
-        frc::SmartDashboard::PutNumber(m_ra->module_name + " CStP", m_ra->steer->GetSelectedSensorPosition());*/
+        frc::SmartDashboard::PutNumber(m_ra->module_name + " CStP", m_ra->steer->GetSelectedSensorPosition());
   
         frc::SmartDashboard::PutString("Drive Mode ", m_mode == DriveMode::RobotCentric ? "Robot Centric" : "Field Oriented");        
 
@@ -262,5 +261,13 @@ namespace t34 {
         m_rf->steer->SetSelectedSensorPosition(m_rf->steer->GetSelectedSensorPosition() - m_rf->zero_offset);
         m_ra->steer->SetSelectedSensorPosition(m_ra->steer->GetSelectedSensorPosition() - m_ra->zero_offset);
     }
+
+  void SwerveDrive::zeroDrive()
+  {
+        m_lf->drive->SetSelectedSensorPosition(0.0);
+        m_la->drive->SetSelectedSensorPosition(0.0);
+        m_rf->drive->SetSelectedSensorPosition(0.0);
+        m_ra->drive->SetSelectedSensorPosition(0.0);
+  }
 
 }

@@ -21,7 +21,9 @@ namespace t34
   class CMD_ReturnHome
       : public frc2::CommandHelper<frc2::CommandBase, CMD_ReturnHome> {
    public:
-  
+
+    //double arm_drive{};
+
     CMD_ReturnHome();
   
     void Initialize() override;

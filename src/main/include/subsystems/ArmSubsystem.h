@@ -32,6 +32,7 @@ public:
     frc2::PIDController arm_y_pid;
     frc2::PIDController arm_ext_pid;
 
+    double ext_sp;
     double wrist_y_degrees;
     double wrist_rot_degrees;
     double arm_degrees;

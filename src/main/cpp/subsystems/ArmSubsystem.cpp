@@ -25,6 +25,7 @@ ArmSubsystem::ArmSubsystem()
     , m_wrist_rot(rev::CANSparkMax(ID_WRIST_ROT_MOTOR, rev::CANSparkMaxLowLevel::MotorType::kBrushless))
     , wrist_y_encoder(m_wrist_y.GetEncoder())
     , wrist_rot_encoder(m_wrist_rot.GetEncoder()) 
+    , ext_sp(-100.0)
     {
     
     m_arm.ConfigIntegratedSensorAbsoluteRange(AbsoluteSensorRange::Unsigned_0_to_360);
@@ -40,9 +41,11 @@ ArmSubsystem::ArmSubsystem()
     arm_slot.closedLoopPeakOutput = 0.0;
 
     m_arm.ConfigSelectedFeedbackSensor(TalonFXFeedbackDevice::IntegratedSensor);
+    m_arm.ConfigFeedbackNotContinuous(false);
     m_arm.ConfigureSlot(arm_slot, 0, 0);
 
-    arm_y_pid.EnableContinuousInput(0.0, 360.0);
+
+    arm_y_pid.DisableContinuousInput();
     wrist_y_pid.EnableContinuousInput(-180.0, 180.0);
     wrist_rot_pid.EnableContinuousInput(-180.0, 180.0);
 
@@ -86,6 +89,7 @@ void ArmSubsystem::Periodic() {
     if (m_telemetry_on) {
         frc::SmartDashboard::PutNumber("Arm Angle (DEG)", GetAngle());
         frc::SmartDashboard::PutNumber("Arm Angle (RAW)", GetRawAngle());    
+        frc::SmartDashboard::PutNumber("Arm PID SP", arm_y_pid.GetSetpoint());
     }
 }
 
@@ -122,38 +126,33 @@ void ArmSubsystem::SetRawAngle(double encoder_units, bool apply_offset) {
 void ArmSubsystem::ArmExtZero() {
     if (m_arm_ext.IsRevLimitSwitchClosed()) {
         arm_ext_encoder.Reset();
+        rc->armSub.m_arm_ext.Set(ControlMode::PercentOutput, 0.0);
     }
 }
 
 void ArmSubsystem::Arm_Pitch_Cntrl()
 {
     if (rc->m_driver_control->GetRightBumper()) {
-    if (rc->m_limit_switch_back.Get()) {
-          auto current = rc->armSub.arm_y_pid.GetSetpoint();
+        auto current = rc->armSub.arm_y_pid.GetSetpoint();
 
-          if (current < 44.0) {
-            rc->armSub.arm_y_pid.SetSetpoint(44.0);
-          }
+        if (current < 44.0) {
+          rc->armSub.arm_y_pid.SetSetpoint(44.0);
+        }
 
-          else {
-            rc->armSub.arm_y_pid.SetSetpoint( current - t34::ARM_PITCH_VAL);
-          }
-    }
-
+        else {
+          rc->armSub.arm_y_pid.SetSetpoint( current - t34::ARM_PITCH_VAL);
+        }
   }
   else if (rc->m_driver_control->GetLeftBumper()) {
-      if (rc->m_limit_switch_front.Get()) {
-          auto current = rc->armSub.arm_y_pid.GetSetpoint();
+         auto current = rc->armSub.arm_y_pid.GetSetpoint();
 
-          if (current > 333.0) 
-          {
-             rc->armSub.arm_y_pid.SetSetpoint(333.0);
-          }
+         if (current > 337.0) 
+         {
+            rc->armSub.arm_y_pid.SetSetpoint(337.0);
+         }
 
-          else {
-            rc->armSub.arm_y_pid.SetSetpoint( current + t34::ARM_PITCH_VAL);
-          }
-
+         else {
+           rc->armSub.arm_y_pid.SetSetpoint( current + t34::ARM_PITCH_VAL);
       }
   }
 } 

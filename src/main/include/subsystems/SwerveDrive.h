@@ -99,14 +99,15 @@ namespace t34 {
 
         // Zeroing
         void zeroIntegratedEncoders();
+        void zeroDrive();
 
         std::shared_ptr<SwerveModule> m_lf;
         std::shared_ptr<SwerveModule> m_la;
         std::shared_ptr<SwerveModule> m_rf;
         std::shared_ptr<SwerveModule> m_ra;
 
-    private:
         std::shared_ptr<AHRS> m_gyro;
+    private:
         double m_heading_offset;
         DriveMode m_mode;
 

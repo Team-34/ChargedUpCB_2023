@@ -16,9 +16,9 @@ namespace t34
 
     void DefaultDriveCommand::Execute() {
         //std::cout << "Encoder Driven: " << m_drive->getOdometer() << std::endl;
-       //double x = m_driver_control->getLeftStickXDB(); 
-       //double y =           m_driver_control->getLeftStickYDB(); 
-       //double z =           m_driver_control->getTriggersCoercedDB();
+       double x = m_driver_control->getLeftStickXDB(); 
+       double y =           m_driver_control->getLeftStickYDB(); 
+       double z =           m_driver_control->getTriggersCoercedDB();
             m_drive->drive
             (
             -m_driver_control->getLeftStickXDB(), 

@@ -22,21 +22,14 @@ namespace t34
         m_encoderDriven = 0.0;
         rc->m_drive->resetOdometer();
         m_encoderBetweenLoop = rc->m_drive->getOdometer();
+        rc->m_drive->zeroDrive();
     }
 
     void CMD_DriveStraightDistance::Execute() 
     {
         auto rc = RobotContainer::get();
         auto od = rc->m_drive->getOdometer();
-        auto d_pid = std::clamp(rc->drive_pid.Calculate(rc->m_drive->getOdometer(), m_distance), -0.2, 0.2);
-        // frc::SmartDashboard::PutNumber("OD", od);
-        // frc::SmartDashboard::PutNumber("OD PRE LOOP", m_encoderBetweenLoop);
-        // m_encoderBetweenLoop = rc->m_drive->getOdometer() - m_encoderBetweenLoop;
-        // frc::SmartDashboard::PutNumber("OD POST LOOP", m_encoderBetweenLoop);
-        // m_encoderDriven += m_encoderBetweenLoop;
-        // frc::SmartDashboard::PutNumber("OD DRIVEN", m_encoderDriven);
-        //double speed = (m_distance - m_encoderDriven) * m_kP;
-        //double rotation = (rc->m_drive->getYaw()) * m_rotationSpeed;
+        auto d_pid = std::clamp(rc->drive_pid.Calculate(rc->m_drive->getOdometer(), m_distance), -0.4, 0.4);
         rc->m_drive->drive(0.0 /*m_speed*/, d_pid, 0.0);
         frc::SmartDashboard::PutNumber("pid output", d_pid);
     }
@@ -44,7 +37,7 @@ namespace t34
     bool CMD_DriveStraightDistance::IsFinished()
     {
         auto rc = RobotContainer::get();
-
+        
         if (rc->m_drive->getOdometer() /*m_encoderDriven*/ >= m_distance){
             rc->m_drive->m_la->drive->Set(ControlMode::PercentOutput, 0);
             rc->m_drive->m_lf->drive->Set(ControlMode::PercentOutput, 0);

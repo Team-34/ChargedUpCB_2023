@@ -47,7 +47,7 @@ class RobotContainer
  public:
     static std::shared_ptr<RobotContainer> get();
 
-    cs::UsbCamera m_front_cam;
+    //cs::UsbCamera m_front_cam;
 
     AHRS navX;
 

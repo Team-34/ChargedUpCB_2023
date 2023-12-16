@@ -27,7 +27,7 @@ RobotContainer::RobotContainer()
     , steer_pid(frc::PIDController(0.1, 0.0, 0.0))
     , m_limit_switch_back(5)
     , m_limit_switch_front(4)
-    , m_front_cam("FRONT CAM", 0)
+  // , m_front_cam("FRONT CAM", 0)
     , navX(frc::SPI::Port::kMXP)
     {
 
